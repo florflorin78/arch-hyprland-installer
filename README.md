@@ -19,7 +19,8 @@ merge pe orice tip de stocare (HDD, SATA SSD, sau NVMe M.2), cu boot instant
 
 1. Boot pe Arch ISO (USB), conectezi la net (`iwctl` dacă e wifi).
 2. Rulezi:
-   ```bash curl -fsSL https://raw.githubusercontent.com/florflorin78/arch-hyprland-x270/main/install-base.sh | bash
+   ```
+   bash curl -fsSL https://raw.githubusercontent.com/florflorin78/arch-hyprland-x270/main/install-base.sh | bash
    ```
 3. Scriptul: detectează automat tipul discului (HDD/SSD) și tipul de partiție
    (NVMe vs SATA), te întreabă ce disc, cere confirmare explicită înainte de a șterge,
@@ -28,7 +29,8 @@ merge pe orice tip de stocare (HDD, SATA SSD, sau NVMe M.2), cu boot instant
 4. `umount -R /mnt && reboot`.
 5. Boot-ul acum e instant — vezi doar splash-ul Plymouth, apoi login (consolă TTY, fără GUI încă).
 6. Login cu userul creat, apoi:
-   ```bash curl -fsSL https://raw.githubusercontent.com/florflorin78/arch-hyprland-x270/main/post-install.sh | bash
+   ```
+   bash curl -fsSL https://raw.githubusercontent.com/florflorin78/arch-hyprland-x270/main/post-install.sh | bash
    ```
 7. `reboot`. Ajungi la greetd -> Hyprland, la setările lui implicite (fără dotfiles încă,
    dacă e prima rulare).
