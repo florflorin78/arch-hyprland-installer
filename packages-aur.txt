@@ -1,0 +1,2 @@
+# Gol momentan. Adaug aici pachete AUR pe masura ce le voi decide
+# (ex: yay le instaleaza automat din post-install.sh).
