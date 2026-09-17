@@ -22,12 +22,12 @@ verifica_internet() {
     fi
 }
 
+
 verifica_uefi() {
     if [ -d /sys/firmware/efi ]; then
-        echo "[OK] Sistemul a bootat în mod UEFI."
+        echo "Sistemul este pe UEFI."
     else
-        echo "[EROARE] Sistemul NU e în mod UEFI (probabil Legacy/BIOS)."
-        echo "         GRUB cu tema grafică are nevoie de UEFI. Verifică setările de boot."
+        echo "Sistemul nu este pe UEFI."
         exit 1
     fi
 }
