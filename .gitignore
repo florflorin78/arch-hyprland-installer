@@ -1,4 +1,5 @@
 *.iso
 *.qcow2
 .vscode/
-BASH_CHEATSHEET.md
+BASH_CHEATSHEET.md*:Zone.Identifier
+*:Zone.Identifier

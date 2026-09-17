@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=X270 Fancy
+Description=Minimal fancy splash for the X270 build
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/x270-fancy
+ScriptFile=/usr/share/plymouth/themes/x270-fancy/x270-fancy.script
