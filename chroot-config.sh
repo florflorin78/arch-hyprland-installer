@@ -20,7 +20,7 @@ DISK_TYPE="$5"
 GPU_VENDOR="$6"
 
 GITHUB_USER="florflorin78"
-REPO="arch-install-hyprland"
+REPO="arch-hyprland-installer"
 BRANCH="main"
 RAW_BASE="https://raw.githubusercontent.com/${GITHUB_USER}/${REPO}/${BRANCH}"
 

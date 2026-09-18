@@ -10,7 +10,7 @@
 set -euo pipefail
 
 GITHUB_USER="florflorin78"
-REPO="arch-install-hyprland"
+REPO="arch-hyprland-installer"
 BRANCH="main"
 RAW_BASE="https://raw.githubusercontent.com/${GITHUB_USER}/${REPO}/${BRANCH}"
 
@@ -208,7 +208,7 @@ main() {
     echo "== Base installation complete =="
     echo "Run 'umount -R /mnt' then 'reboot'."
     echo "After first login, run post-install.sh as ${USERNAME}:"
-    echo "  curl -fsSL ${RAW_BASE}/post-install.sh -o post-install.sh && bash post-install.sh"
+    echo "curl -fsSL ${RAW_BASE}/post-install.sh -o post-install.sh && bash post-install.sh"
 }
 
 main
