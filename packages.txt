@@ -1,4 +1,6 @@
-# Set minimal ca Hyprland sa porneasca. Adaug live, orice altceva vreau (teme, aplicatii, utilitare) dupa ce bootez si vad cum arata.
+# Minimal package set required for a functional Hyprland session.
+# GPU drivers are installed automatically during chroot-config.sh based on
+# detected hardware; do not add them here.
 
 hyprland
 xdg-desktop-portal-hyprland
@@ -6,16 +8,12 @@ kitty
 greetd
 greetd-tuigreet
 
-# Grafica Intel (X270 = Intel HD 520)
-mesa
-vulkan-intel
-
-# Audio (fara sunet, Hyprland tot porneste, dar il vrei de la inceput)
+# Audio
 pipewire
 pipewire-pulse
 pipewire-alsa
 wireplumber
 
-# Utilitare minime
+# Networking
 networkmanager
 network-manager-applet

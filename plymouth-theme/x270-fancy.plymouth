@@ -1,8 +1,8 @@
 [Plymouth Theme]
-Name=X270 Fancy
-Description=Minimal fancy splash for the X270 build
+Name=arch-install-hyprland
+Description=Minimal boot splash theme
 ModuleName=script
 
 [script]
-ImageDir=/usr/share/plymouth/themes/x270-fancy
-ScriptFile=/usr/share/plymouth/themes/x270-fancy/x270-fancy.script
+ImageDir=/usr/share/plymouth/themes/arch-install-hyprland
+ScriptFile=/usr/share/plymouth/themes/arch-install-hyprland/arch-install-hyprland.script
