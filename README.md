@@ -52,7 +52,7 @@ ping -c1 archlinux.org
 ### 3. Run the base installer
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/florflorin78/arch-install-hyprland/main/install-base.sh -o install-base.sh
+curl -fsSL https://raw.githubusercontent.com/florflorin78/arch-hyprland-installer/main/install-base.sh -o install-base.sh
 bash install-base.sh
 ```
 
@@ -74,7 +74,7 @@ reboot
 ### 5. Post-install (after first login)
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/florflorin78/arch-install-hyprland/main/post-install.sh -o post-install.sh
+curl -fsSL https://raw.githubusercontent.com/florflorin78/arch-hyprland-installer/main/post-install.sh -o post-install.sh
 bash post-install.sh
 ```
 

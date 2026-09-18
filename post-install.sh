@@ -4,7 +4,7 @@
 set -euo pipefail
 
 GITHUB_USER="florflorin78"
-REPO="arch-hyprland-x270"
+REPO="arch-hyprland-installer"
 BRANCH="main"
 
 if [ "$EUID" -eq 0 ]; then
