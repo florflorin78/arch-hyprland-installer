@@ -40,16 +40,20 @@ git pull
 # --- Packages ----------------------------------------------------------
 if [ -s "packages.txt" ]; then
     echo "Installing pacman packages..."
-    grep -v '^[[:space:]]*#' packages.txt | grep -v '^[[:space:]]*$' | sudo pacman -S --needed --noconfirm -
-else
-    echo "[WARN] packages.txt is empty or missing!"
+    PAC_PKGS=$(grep -v '^[[:space:]]*#' packages.txt | grep -v '^[[:space:]]*$' || true)
+    if [ -n "$PAC_PKGS" ]; then
+        echo "$PAC_PKGS" | sudo pacman -S --needed --noconfirm -
+    fi
 fi
 
 if [ -s "packages-aur.txt" ]; then
     echo "Installing AUR packages..."
-    grep -v '^[[:space:]]*#' packages-aur.txt | grep -v '^[[:space:]]*$' | yay -S --needed --noconfirm -
-else
-    echo "[WARN] packages-aur.txt is empty or missing!"
+    AUR_PKGS=$(grep -v '^[[:space:]]*#' packages-aur.txt | grep -v '^[[:space:]]*$' || true)
+    if [ -n "$AUR_PKGS" ]; then
+        echo "$AUR_PKGS" | yay -S --needed --noconfirm -
+    else
+        echo "No AUR packages to install."
+    fi
 fi
 
 # --- zram (compressed swap, auto-scales with installed RAM) --------------
