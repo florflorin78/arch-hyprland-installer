@@ -2,21 +2,51 @@
 # GPU drivers are installed automatically during chroot-config.sh based on
 # detected hardware; do not add them here.
 
-hyprland
-xdg-desktop-portal-hyprland
-kitty
-sddm
-qt5-graphicaleffects
-qt5-quickcontrols2
-qt5-svg
-hyprpolkitagent
+# --- Core Session & Display Manager ---
+hyprpaper                     # Official wallpaper utility for Hyprland with multi-monitor support
+hyprland                        # The core Wayland window compositor and manager
+waybar                          # Fast, customizable status bar for Wayland
+xdg-desktop-portal-hyprland     # Backend bridge for screen sharing, file pickers, and portal features
+kitty                           # GPU-accelerated modern terminal emulator
+sddm                            # Graphical login display manager
+qt5-graphicaleffects            # Qt5 visual effects required by SDDM themes
+qt5-quickcontrols2              # Qt5 UI controls required by SDDM themes
+qt5-svg                         # Qt5 SVG rendering support for SDDM icons and themes
+hyprpolkitagent                 # Native authentication agent for root privilege prompts
 
-# Audio
-pipewire
-pipewire-pulse
-pipewire-alsa
-wireplumber
+# --- Audio Stack ---
+pipewire                        # Modern multimedia server handling audio and video streams
+pipewire-pulse                  # Compatibility layer for PulseAudio applications
+pipewire-alsa                   # Compatibility layer for ALSA audio applications
+wireplumber                     # Session and policy manager for PipeWire audio devices
 
-# Networking
-networkmanager
-network-manager-applet
+# --- Clipboard & File Manager (CLI) ---
+wl-clipboard                    # Wayland command-line clipboard utilities (wl-copy / wl-paste)
+yazi                            # Blazing-fast terminal file manager
+ffmpegthumbnailer               # Video thumbnail generator for Yazi
+unar                            # Multi-format archive extraction tool for Yazi
+jq                              # Command-line JSON processor for scripts and Yazi
+poppler                         # PDF rendering library for document previews in Yazi
+fd                              # Fast alternative to 'find' for quick file searching
+ripgrep                         # Ultra-fast text search tool (rg) for searching inside files
+
+# --- Networking ---
+networkmanager                  # Background system daemon for managing network connections
+network-manager-applet          # Graphical system tray applet for managing Wi-Fi and networks
+
+# --- Notifications ---
+mako                          # Lightweight notification daemon for Wayland
+
+# --- Hardware Controls ---
+pamixer                       # Command-line audio volume control
+brightnessctl                 # Backlight / brightness control utility
+
+# --- Archives ---
+unzip                         # ZIP archive extraction utility
+p7zip                         # 7-Zip extraction support
+
+# --- App Launcher ---
+fuzzel                        # Fast, minimalist application launcher for Wayland
+
+# --- Fonts ---
+ttf-jetbrains-mono-nerd       # Monospaced font with icons for Waybar and terminal

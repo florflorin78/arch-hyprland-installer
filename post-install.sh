@@ -4,7 +4,7 @@
 #
 # User-space setup, run after first login (not as root). Installs yay, the
 # packages listed in packages.txt / packages-aur.txt, configures zram and
-# greetd, and applies dotfiles via GNU Stow if present.
+# sddm, and applies dotfiles via GNU Stow if present.
 #
 set -euo pipefail
 
