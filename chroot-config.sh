@@ -1,39 +1,80 @@
 #!/usr/bin/env bash
+#
 # chroot-config.sh
-# Rulat automat de install-base.sh, ÎN INTERIORUL arch-chroot.
-# Args: $1=hostname  $2=username  $3=boot_partition  $4=disc_path  $5=tip_disc (HDD/SSD)
+#
+# System configuration, executed automatically by install-base.sh inside
+# arch-chroot. Handles locale, hostname, user creation, bootloader (GRUB,
+# instant boot), Plymouth boot splash, SSD TRIM, and NetworkManager. GPU
+# driver and KMS module are selected based on detected hardware.
+#
+# Arguments: $1=hostname  $2=username  $3=boot_partition  $4=disk_path
+#            $5=disk_type  $6=gpu_vendor
+#
 set -euo pipefail
 
 HOSTNAME="$1"
 USERNAME="$2"
 BOOT_PART="$3"
-DISC_PATH="$4"
-TIP_DISC="$5"
+DISK_PATH="$4"
+DISK_TYPE="$5"
+GPU_VENDOR="$6"
 
 GITHUB_USER="florflorin78"
-REPO="arch-hyprland-x270"
+REPO="arch-install-hyprland"
 BRANCH="main"
 RAW_BASE="https://raw.githubusercontent.com/${GITHUB_USER}/${REPO}/${BRANCH}"
 
-# ============================================================
-# TIMEZONE + LOCALE
-# ============================================================
-seteaza_timezone_locale() {
-    ln -sf /usr/share/zoneinfo/Europe/Bucharest /etc/localtime
+# ---------------------------------------------------------------------------
+# Locale and timezone
+# ---------------------------------------------------------------------------
+configure_locale() {
+    echo ">>> Timezone (e.g. Europe/Bucharest, America/New_York). See:"
+    echo "    https://en.wikipedia.org/wiki/List_of_tz_database_time_zones"
+    read -rp "Timezone: " TIMEZONE
+    if [ ! -e "/usr/share/zoneinfo/${TIMEZONE}" ]; then
+        echo "[WARN] Unrecognized timezone, defaulting to UTC."
+        TIMEZONE="UTC"
+    fi
+    ln -sf "/usr/share/zoneinfo/${TIMEZONE}" /etc/localtime
     hwclock --systohc
 
     sed -i 's/^#en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen
-    sed -i 's/^#ro_RO.UTF-8 UTF-8/ro_RO.UTF-8 UTF-8/' /etc/locale.gen
     locale-gen
 
     echo "LANG=en_US.UTF-8" > /etc/locale.conf
     echo "KEYMAP=us" > /etc/vconsole.conf
 }
 
-# ============================================================
-# HOSTNAME
-# ============================================================
-seteaza_hostname() {
+# ---------------------------------------------------------------------------
+# GPU driver (selected by detected vendor)
+# ---------------------------------------------------------------------------
+install_gpu_driver() {
+    case "$GPU_VENDOR" in
+        intel)
+            pacman -S --needed --noconfirm mesa vulkan-intel intel-media-driver
+            KMS_MODULE="i915"
+            ;;
+        amd)
+            pacman -S --needed --noconfirm mesa vulkan-radeon libva-mesa-driver
+            KMS_MODULE="amdgpu"
+            ;;
+        nvidia)
+            pacman -S --needed --noconfirm mesa nvidia-open nvidia-utils
+            KMS_MODULE="nvidia"
+            ;;
+        *)
+            echo "[WARN] Unknown GPU vendor, installing generic mesa only."
+            pacman -S --needed --noconfirm mesa
+            KMS_MODULE=""
+            ;;
+    esac
+    export KMS_MODULE
+}
+
+# ---------------------------------------------------------------------------
+# Hostname
+# ---------------------------------------------------------------------------
+configure_hostname() {
     echo "$HOSTNAME" > /etc/hostname
     cat >> /etc/hosts <<EOF
 127.0.0.1   localhost
@@ -42,128 +83,116 @@ seteaza_hostname() {
 EOF
 }
 
-# ============================================================
-# USER + SUDO
-# ============================================================
-creeaza_user() {
+# ---------------------------------------------------------------------------
+# User account and sudo
+# ---------------------------------------------------------------------------
+create_user() {
     useradd -m -G wheel -s /bin/bash "$USERNAME"
-    echo ">>> Setează parola pentru utilizatorul ${USERNAME}:"
+    echo ">>> Set password for ${USERNAME}:"
     passwd "$USERNAME"
-    echo ">>> Setează parola pentru root:"
+    echo ">>> Set password for root:"
     passwd
 }
 
-configureaza_sudo() {
+configure_sudo() {
     sed -i 's/^# %wheel ALL=(ALL:ALL) ALL/%wheel ALL=(ALL:ALL) ALL/' /etc/sudoers
 }
 
-# ============================================================
-# GRUB — instalare + boot instant (timeout=0), fără meniu vizibil
-# ============================================================
-instaleaza_grub() {
-    echo "Instalez GRUB (UEFI)..."
-    grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=GRUB "$DISC_PATH"
+# ---------------------------------------------------------------------------
+# Bootloader: GRUB, UEFI, instant boot (no visible menu)
+# ---------------------------------------------------------------------------
+install_grub() {
+    echo "Installing GRUB (UEFI)..."
+    grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=GRUB "$DISK_PATH"
 }
 
-configureaza_grub_boot_instant() {
-    # timeout=0 => pornește direct Arch, fără să aștepte input (boot "instant")
-    # GRUB_TIMEOUT_STYLE=hidden => nu afișează deloc meniul text, doar splash-ul Plymouth
+configure_instant_boot() {
     sed -i 's/^GRUB_TIMEOUT=.*/GRUB_TIMEOUT=0/' /etc/default/grub
     sed -i 's/^#GRUB_TIMEOUT_STYLE=.*/GRUB_TIMEOUT_STYLE=hidden/' /etc/default/grub
     if ! grep -q "^GRUB_TIMEOUT_STYLE=" /etc/default/grub; then
         echo "GRUB_TIMEOUT_STYLE=hidden" >> /etc/default/grub
     fi
-
-    # Adaug "quiet splash" la kernel, ca să nu se vadă text derulant, ci doar Plymouth
     sed -i 's/^GRUB_CMDLINE_LINUX_DEFAULT=.*/GRUB_CMDLINE_LINUX_DEFAULT="quiet splash"/' /etc/default/grub
 
     grub-mkconfig -o /boot/grub/grub.cfg
 }
 
-# ============================================================
-# PLYMOUTH — splash screen fancy la boot, în loc de consolă text
-# ============================================================
-instaleaza_plymouth() {
-    echo "Instalez Plymouth..."
+# ---------------------------------------------------------------------------
+# Plymouth boot splash
+# ---------------------------------------------------------------------------
+install_plymouth() {
+    echo "Installing Plymouth..."
     pacman -S --needed --noconfirm plymouth
 
-    # HOOKS reordonate + "kms" pus devreme = driverul video (i915, pt Intel HD 520)
-    # se încarcă ÎNAINTE de Plymouth. Fără asta, ecranul "sare" o dată (rezoluție
-    # mică -> rezoluție mare) când se încarcă driverul abia mai târziu — asta e flicker-ul vizibil. Cu "kms" devreme, tranziția e continuă, fără sărituri.
+    # "kms" must precede "plymouth" so the video driver loads before the
+    # splash renders, avoiding a resolution-switch flicker.
     sed -i 's/^HOOKS=.*/HOOKS=(base udev autodetect modconf kms keyboard keymap consolefont block plymouth filesystems fsck)/' /etc/mkinitcpio.conf
-
-    # i915 = driverul kernel pentru grafica Intel a X270-ului. Îl încărcăm explicit
-    # devreme (early KMS), nu lăsat să se încarce "cand vrea el" mai târziu.
-    sed -i 's/^MODULES=.*/MODULES=(i915)/' /etc/mkinitcpio.conf
+    if [ -n "${KMS_MODULE:-}" ]; then
+        sed -i "s/^MODULES=.*/MODULES=(${KMS_MODULE})/" /etc/mkinitcpio.conf
+    fi
 
     mkinitcpio -P
 
-    # Descarc tema custom din repo și o instalez
-    mkdir -p /usr/share/plymouth/themes/x270-fancy
-    curl -fsSL "${RAW_BASE}/plymouth-theme/x270-fancy.plymouth" \
-        -o /usr/share/plymouth/themes/x270-fancy/x270-fancy.plymouth
-    curl -fsSL "${RAW_BASE}/plymouth-theme/x270-fancy.script" \
-        -o /usr/share/plymouth/themes/x270-fancy/x270-fancy.script
+    mkdir -p /usr/share/plymouth/themes/arch-install-hyprland
+    curl -fsSL "${RAW_BASE}/plymouth-theme/arch-install-hyprland.plymouth" \
+        -o /usr/share/plymouth/themes/arch-install-hyprland/arch-install-hyprland.plymouth
+    curl -fsSL "${RAW_BASE}/plymouth-theme/arch-install-hyprland.script" \
+        -o /usr/share/plymouth/themes/arch-install-hyprland/arch-install-hyprland.script
 
-    plymouth-set-default-theme -R x270-fancy
+    plymouth-set-default-theme -R arch-install-hyprland
 }
 
-# ============================================================
-# BOOT RAPID — reduce timpul de boot la minim
-# ============================================================
-optimizeaza_boot_rapid() {
-    # loglevel=3 = kernelul nu mai printează mesaje pe ecran (le ții tot în `journalctl` dacă ai nevoie de ele, doar nu le mai AFIȘEZI la boot)
-    # vt.global_cursor_default=0 = ascunde cursorul care "sare" pe ecran
+# ---------------------------------------------------------------------------
+# Boot time optimizations
+# ---------------------------------------------------------------------------
+optimize_boot_time() {
     sed -i 's/^GRUB_CMDLINE_LINUX_DEFAULT=.*/GRUB_CMDLINE_LINUX_DEFAULT="quiet splash loglevel=3 vt.global_cursor_default=0"/' /etc/default/grub
 
-    # Nu avem alt OS de detectat (doar Arch pe disc) -> grub-mkconfig nu mai pierde timp scanând alte partiții pentru dual-boot
     if ! grep -q "^GRUB_DISABLE_OS_PROBER=" /etc/default/grub; then
         echo "GRUB_DISABLE_OS_PROBER=true" >> /etc/default/grub
     fi
 
     grub-mkconfig -o /boot/grub/grub.cfg
 
-    # NetworkManager-wait-online blochează boot-ul până confirmă că netul e sus.
-    # Nu e nevoie de asta ca să ajungi la login — netul se conectează oricum în fundal câteva secunde mai târziu, fără să te blocheze pe ecranul de boot.
     systemctl disable NetworkManager-wait-online.service 2>/dev/null || true
 }
 
-
-# ============================================================
-# TRIM — doar dacă discul e SSD (nu strică pe HDD, dar nu are rost)
-# ============================================================
-activeaza_trim_daca_ssd() {
-    if [ "$TIP_DISC" = "SSD" ]; then
-        echo "Disc SSD detectat -> activez fstrim.timer (TRIM periodic)."
+# ---------------------------------------------------------------------------
+# SSD TRIM (skipped on HDD)
+# ---------------------------------------------------------------------------
+configure_trim() {
+    if [ "$DISK_TYPE" = "SSD" ]; then
+        echo "SSD detected: enabling fstrim.timer."
         systemctl enable fstrim.timer
     else
-        echo "Disc HDD detectat -> TRIM nu se aplică, nu activez fstrim.timer."
+        echo "HDD detected: TRIM not applicable."
     fi
 }
 
-# ============================================================
-# NETWORKMANAGER
-# ============================================================
-activeaza_networkmanager() {
+# ---------------------------------------------------------------------------
+# NetworkManager
+# ---------------------------------------------------------------------------
+enable_network_manager() {
     systemctl enable NetworkManager
 }
 
-# ============================================================
-# MAIN
-# ============================================================
+# ---------------------------------------------------------------------------
+# Main
+# ---------------------------------------------------------------------------
 main() {
-    seteaza_timezone_locale
-    seteaza_hostname
-    creeaza_user
-    configureaza_sudo
-    instaleaza_grub
-    configureaza_grub_boot_instant
-    instaleaza_plymouth
-    optimizeaza_boot_rapid
-    activeaza_trim_daca_ssd
-    activeaza_networkmanager
+    configure_locale
+    configure_hostname
+    create_user
+    configure_sudo
+    install_grub
+    configure_instant_boot
+    install_gpu_driver
+    install_plymouth
+    optimize_boot_time
+    configure_trim
+    enable_network_manager
 
-    echo "== chroot-config.sh complet =="
+    echo "== chroot-config.sh complete =="
 }
 
 main
