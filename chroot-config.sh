@@ -124,8 +124,6 @@ install_plymouth() {
     echo "Installing Plymouth..."
     pacman -S --needed --noconfirm plymouth
 
-    # "kms" must precede "plymouth" so the video driver loads before the
-    # splash renders, avoiding a resolution-switch flicker.
     sed -i 's/^HOOKS=.*/HOOKS=(base udev autodetect modconf kms keyboard keymap consolefont block plymouth filesystems fsck)/' /etc/mkinitcpio.conf
     if [ -n "${KMS_MODULE:-}" ]; then
         sed -i "s/^MODULES=.*/MODULES=(${KMS_MODULE})/" /etc/mkinitcpio.conf
@@ -133,13 +131,13 @@ install_plymouth() {
 
     mkinitcpio -P
 
-    mkdir -p /usr/share/plymouth/themes/arch-install-hyprland
-    curl -fsSL "${RAW_BASE}/plymouth-theme/arch-install-hyprland.plymouth" \
-        -o /usr/share/plymouth/themes/arch-install-hyprland/arch-install-hyprland.plymouth
-    curl -fsSL "${RAW_BASE}/plymouth-theme/arch-install-hyprland.script" \
-        -o /usr/share/plymouth/themes/arch-install-hyprland/arch-install-hyprland.script
+    mkdir -p /usr/share/plymouth/themes/x270-fancy
+    curl -fsSL "${RAW_BASE}/plymouth-theme/x270-fancy.plymouth" \
+        -o /usr/share/plymouth/themes/x270-fancy/x270-fancy.plymouth
+    curl -fsSL "${RAW_BASE}/plymouth-theme/x270-fancy.script" \
+        -o /usr/share/plymouth/themes/x270-fancy/x270-fancy.script
 
-    plymouth-set-default-theme -R arch-install-hyprland
+    plymouth-set-default-theme -R x270-fancy
 }
 
 # ---------------------------------------------------------------------------
