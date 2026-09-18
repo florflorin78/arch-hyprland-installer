@@ -39,10 +39,10 @@ git pull
 
 # --- Packages ----------------------------------------------------------
 echo "Installing pacman packages..."
-sudo pacman -S --needed --noconfirm - < packages.txt
+grep -v '^[[:space:]]*#' packages.txt | grep -v '^[[:space:]]*$' | sudo pacman -S --needed --noconfirm -
 
 echo "Installing AUR packages..."
-yay -S --needed --noconfirm - < packages-aur.txt
+grep -v '^[[:space:]]*#' packages-aur.txt | grep -v '^[[:space:]]*$' | yay -S --needed --noconfirm -
 
 # --- zram (compressed swap, auto-scales with installed RAM) --------------
 sudo tee /etc/systemd/zram-generator.conf > /dev/null <<EOF
