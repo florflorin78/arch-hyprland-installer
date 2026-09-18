@@ -9,7 +9,7 @@
 #
 # Arguments: $1=hostname  $2=username  $3=boot_partition  $4=disk_path
 #            $5=disk_type  $6=gpu_vendor
-#
+##
 set -euo pipefail
 
 HOSTNAME="$1"
