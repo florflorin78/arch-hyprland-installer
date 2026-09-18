@@ -28,12 +28,12 @@ RAW_BASE="https://raw.githubusercontent.com/${GITHUB_USER}/${REPO}/${BRANCH}"
 # Locale and timezone
 # ---------------------------------------------------------------------------
 configure_locale() {
-    echo ">>> Timezone (e.g. Europe/Bucharest, America/New_York). See:"
-    echo "    https://en.wikipedia.org/wiki/List_of_tz_database_time_zones"
-    read -rp "Timezone: " TIMEZONE
+    echo ">>> Timezone (press Enter for default: Europe/Bucharest)."
+    read -rp "Timezone [Europe/Bucharest]: " TIMEZONE
+    TIMEZONE="${TIMEZONE:-Europe/Bucharest}"
     if [ ! -e "/usr/share/zoneinfo/${TIMEZONE}" ]; then
-        echo "[WARN] Unrecognized timezone, defaulting to UTC."
-        TIMEZONE="UTC"
+        echo "[WARN] Unrecognized timezone '${TIMEZONE}', defaulting to Europe/Bucharest."
+        TIMEZONE="Europe/Bucharest"
     fi
     ln -sf "/usr/share/zoneinfo/${TIMEZONE}" /etc/localtime
     hwclock --systohc
