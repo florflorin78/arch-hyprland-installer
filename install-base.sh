@@ -198,7 +198,7 @@ main() {
     install_base_system "$MICROCODE_PKG"
 
     echo "Fetching chroot-config.sh..."
-    curl -fsSL "${RAW_BASE}/chroot-config.sh" -o /mnt/root/chroot-config.sh
+    curl -fsSL "https://raw.githubusercontent.com/florflorin78/arch-hyprland-installer/main/chroot-config.sh" -o /mnt/root/chroot-config.sh
     chmod +x /mnt/root/chroot-config.sh
 
     echo "Entering chroot for system configuration..."
@@ -208,7 +208,7 @@ main() {
     echo "== Base installation complete =="
     echo "Run 'umount -R /mnt' then 'reboot'."
     echo "After first login, run post-install.sh as ${USERNAME}:"
-    echo "curl -fsSL ${RAW_BASE}/post-install.sh -o post-install.sh && bash post-install.sh"
+    echo "curl -fsSL https://raw.githubusercontent.com/florflorin78/arch-hyprland-installer/main/post-install.sh -o post-install.sh && bash post-install.sh"}
 }
 
 main

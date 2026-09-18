@@ -184,10 +184,10 @@ main() {
     configure_hostname
     create_user
     configure_sudo
+    install_gpu_driver      
     install_grub
     configure_instant_boot
-    install_gpu_driver
-    install_plymouth
+    install_plymouth         
     optimize_boot_time
     configure_trim
     enable_network_manager
