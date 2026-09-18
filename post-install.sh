@@ -38,11 +38,19 @@ git checkout "$BRANCH"
 git pull
 
 # --- Packages ----------------------------------------------------------
-echo "Installing pacman packages..."
-grep -v '^[[:space:]]*#' packages.txt | grep -v '^[[:space:]]*$' | sudo pacman -S --needed --noconfirm -
+if [ -s "packages.txt" ]; then
+    echo "Installing pacman packages..."
+    grep -v '^[[:space:]]*#' packages.txt | grep -v '^[[:space:]]*$' | sudo pacman -S --needed --noconfirm -
+else
+    echo "[WARN] packages.txt is empty or missing!"
+fi
 
-echo "Installing AUR packages..."
-grep -v '^[[:space:]]*#' packages-aur.txt | grep -v '^[[:space:]]*$' | yay -S --needed --noconfirm -
+if [ -s "packages-aur.txt" ]; then
+    echo "Installing AUR packages..."
+    grep -v '^[[:space:]]*#' packages-aur.txt | grep -v '^[[:space:]]*$' | yay -S --needed --noconfirm -
+else
+    echo "[WARN] packages-aur.txt is empty or missing!"
+fi
 
 # --- zram (compressed swap, auto-scales with installed RAM) --------------
 sudo tee /etc/systemd/zram-generator.conf > /dev/null <<EOF
