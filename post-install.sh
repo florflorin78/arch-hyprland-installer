@@ -76,17 +76,9 @@ else
     echo "No dotfiles to apply yet."
 fi
 
-# --- greetd (session manager) -------------------------------------------
-sudo mkdir -p /etc/greetd
-sudo tee /etc/greetd/config.toml > /dev/null <<EOF
-[terminal]
-vt = 1
-
-[default_session]
-command = "tuigreet --cmd Hyprland"
-user = "greeter"
-EOF
-sudo systemctl enable greetd
+# --- SDDM (Display Manager) -------------------------------------------
+echo "Enabling SDDM display manager..."
+sudo systemctl enable sddm
 
 echo
 echo "== post-install.sh complete =="

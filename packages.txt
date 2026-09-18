@@ -5,8 +5,11 @@
 hyprland
 xdg-desktop-portal-hyprland
 kitty
-greetd
-greetd-tuigreet
+sddm
+qt5-graphicaleffects
+qt5-quickcontrols2
+qt5-svg
+hyprpolkitagent
 
 # Audio
 pipewire
