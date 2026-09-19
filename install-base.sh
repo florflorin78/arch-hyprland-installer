@@ -208,7 +208,7 @@ main() {
     echo "== Base installation complete =="
     echo "Run 'umount -R /mnt' then 'reboot'."
     echo "After first login, run post-install.sh as ${USERNAME}:"
-    echo "curl -fsSL https://raw.githubusercontent.com/florflorin78/arch-hyprland-installer/main/post-install.sh -o post-install.sh && bash post-install.sh"}
+    echo "curl -fsSL https://raw.githubusercontent.com/florflorin78/arch-hyprland-installer/main/post-install.sh -o post-install.sh && bash post-install.sh"
 }
 
 main

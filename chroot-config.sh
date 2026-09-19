@@ -103,7 +103,7 @@ configure_sudo() {
 # ---------------------------------------------------------------------------
 install_grub() {
     echo "Installing GRUB (UEFI)..."
-    grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=GRUB "$DISK_PATH"
+    grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=GRUB
 }
 
 configure_instant_boot() {
@@ -112,9 +112,6 @@ configure_instant_boot() {
     if ! grep -q "^GRUB_TIMEOUT_STYLE=" /etc/default/grub; then
         echo "GRUB_TIMEOUT_STYLE=hidden" >> /etc/default/grub
     fi
-    sed -i 's/^GRUB_CMDLINE_LINUX_DEFAULT=.*/GRUB_CMDLINE_LINUX_DEFAULT="quiet splash"/' /etc/default/grub
-
-    grub-mkconfig -o /boot/grub/grub.cfg
 }
 
 # ---------------------------------------------------------------------------

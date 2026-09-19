@@ -1,35 +1,39 @@
-// x270-fancy.script — animație minimalistă: fundal negru + un cerc care se rotește în centru
-// Plymouth folosește un limbaj propriu, simplu, tip JavaScript vechi.
+// arch-install-hyprland.script — minimal boot splash: dark background + rotating dots
+// Plymouth uses its own simple scripting language (loosely JavaScript-like).
 
 Window.SetBackgroundTopColor(0.05, 0.05, 0.07);
 Window.SetBackgroundBottomColor(0.05, 0.05, 0.07);
 
-// Text mic, minimalist, sub cerc
-message_sprite = Sprite();
-message_sprite.SetPosition(Window.GetWidth() / 2 - 60, Window.GetHeight() / 2 + 60, 10000);
+num_dots = 8;
+radius = 30;
+center_x = Window.GetWidth() / 2;
+center_y = Window.GetHeight() / 2;
 
-fun refresh_callback() {
-    // desenăm un cerc simplu care se rotește, format din puncte
-    angle = (Plymouth.GetTime() * 180) % 360;
-    num_dots = 8;
-    radius = 30;
-    center_x = Window.GetWidth() / 2;
-    center_y = Window.GetHeight() / 2;
+dot_image = Image.Text("●", 1, 1, 1);
 
-    for (i = 0; i < num_dots; i++) {
-        dot_angle = angle + (i * 360 / num_dots);
-        dot_x = center_x + radius * Math.Cos(dot_angle * 3.14159 / 180);
-        dot_y = center_y + radius * Math.Sin(dot_angle * 3.14159 / 180);
-
-        if (Plymouth.GetMode() != "shutdown") {
-            opacity = 0.3 + 0.7 * (i / num_dots);
-        }
-    }
+for (i = 0; i < num_dots; i++) {
+    dots[i] = Sprite(dot_image);
+    dot_angle = i * 360 / num_dots;
+    dot_x = center_x + radius * Math.Cos(dot_angle * 3.14159 / 180);
+    dot_y = center_y + radius * Math.Sin(dot_angle * 3.14159 / 180);
+    dots[i].SetPosition(dot_x, dot_y, 10000);
 }
 
+fun refresh_callback() {
+    phase = Math.Int(Plymouth.GetTime() * 8) % num_dots;
+    for (i = 0; i < num_dots; i++) {
+        distance = (i - phase + num_dots) % num_dots;
+        opacity = 0.15 + 0.85 * (1.0 - distance / num_dots);
+        dots[i].SetOpacity(opacity);
+    }
+}
 Plymouth.SetRefreshFunction(refresh_callback);
 
+// Message display (e.g. "Please wait..." from the system)
+message_sprite = Sprite();
 fun message_callback(text) {
-    message_sprite.SetText(text);
+    msg_image = Image.Text(text, 0.7, 0.7, 0.7);
+    message_sprite.SetImage(msg_image);
+    message_sprite.SetPosition(Window.GetWidth() / 2 - msg_image.GetWidth() / 2, center_y + 80, 10000);
 }
 Plymouth.SetMessageFunction(message_callback);

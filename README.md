@@ -84,7 +84,7 @@ bash post-install.sh
 reboot
 ```
 
-Result: instant boot → Plymouth splash → greetd → Hyprland.
+Result: instant boot → Plymouth splash → SDDM → Hyprland.
 
 ## Repository structure
 
@@ -133,8 +133,8 @@ dotfiles/                Post-install configuration, managed with GNU Stow
 ### post-install.sh
 
 Installs `yay`, applies `packages.txt` / `packages-aur.txt`, configures zram
-(compressed swap), configures `greetd` to launch Hyprland, and applies
-`dotfiles/` via `stow` if present.
+(compressed swap), enables SDDM display manager, and applies `dotfiles/` via
+`stow` if present.
 
 ## Modification reference
 
@@ -146,7 +146,7 @@ Installs `yay`, applies `packages.txt` / `packages-aur.txt`, configures zram
 | GRUB timeout behavior | `chroot-config.sh` → `configure_instant_boot` |
 | Partition layout | `install-base.sh` → `partition_and_format` |
 | Default shell | `chroot-config.sh` → `create_user` |
-| Session manager | `post-install.sh`, greetd section |
+| Session manager | `post-install.sh`, SDDM section |
 | Hyprland configuration | `dotfiles/hypr/` (populated post-configuration) |
 
 ## Known issues and resolutions
