@@ -1,0 +1,30 @@
+# Temă GRUB "hackerlinux" — minimalistă, dark, accent neon
+desktop-image: "background.png"
+desktop-color: "#07070c"
+title-text: ""
+terminal-font: "DejaVu Sans Mono Regular 16"
+
++ boot_menu {
+    left = 50%-260
+    top = 56%
+    width = 520
+    height = 190
+    item_font = "DejaVu Sans Mono Regular 22"
+    item_color = "#8d93aa"
+    selected_item_color = "#ff2e63"
+    item_height = 38
+    item_padding = 10
+    item_spacing = 6
+    scrollbar = false
+}
+
++ label {
+    id = "__timeout__"
+    left = 0
+    top = 93%
+    width = 100%
+    align = "center"
+    text = "Pornesc în %d secunde (orice tastă = meniu)"
+    color = "#5b6078"
+    font = "DejaVu Sans Mono Regular 16"
+}

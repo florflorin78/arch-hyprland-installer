@@ -1,0 +1,38 @@
+# Sistem, baterie, boot, utilitare de bază
+zram-generator      # swap comprimat în RAM
+tlp                 # managementul bateriei
+ethtool
+smartmontools
+thermald            # temperaturi / throttling Intel
+lm_sensors
+upower
+acpi
+brightnessctl
+plymouth            # splash la boot
+greetd
+greetd-tuigreet     # login manager în terminal
+bluez
+bluez-utils
+ufw                 # firewall
+reflector
+pacman-contrib      # paccache
+fwupd
+usbutils
+pciutils
+nvme-cli
+dmidecode
+htop
+btop
+fastfetch
+openssh
+rsync
+unzip
+zip
+p7zip
+tree
+wget
+curl
+xdg-utils
+xdg-user-dirs
+libnotify           # notify-send
+powertop            # doar diagnostic (TLP face tuning-ul)

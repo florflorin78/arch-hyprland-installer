@@ -1,0 +1,95 @@
+{
+    "layer": "top",
+    "position": "top",
+    "height": 34,
+    "margin-top": 6,
+    "margin-left": 8,
+    "margin-right": 8,
+    "spacing": 4,
+
+    "modules-left": ["hyprland/workspaces", "hyprland/window"],
+    "modules-center": ["clock"],
+    "modules-right": ["tray", "cpu", "memory", "temperature", "backlight", "pulseaudio", "network", "bluetooth", "battery", "hyprland/language", "custom/power"],
+
+    "hyprland/workspaces": {
+        "format": "{id}",
+        "on-click": "activate",
+        "persistent-workspaces": { "*": 5 }
+    },
+
+    "hyprland/window": {
+        "max-length": 50,
+        "separate-outputs": true
+    },
+
+    "hyprland/language": {
+        "format": " {short}"
+    },
+
+    "clock": {
+        "format": "{:%a %d %b   %H:%M}",
+        "tooltip-format": "<tt>{calendar}</tt>"
+    },
+
+    "cpu": {
+        "format": " {usage}%",
+        "interval": 5
+    },
+
+    "memory": {
+        "format": " {percentage}%",
+        "interval": 10
+    },
+
+    "temperature": {
+        "format": " {temperatureC}°",
+        "critical-threshold": 85,
+        "interval": 10
+    },
+
+    "backlight": {
+        "format": " {percent}%",
+        "on-scroll-up": "brightnessctl set 5%+",
+        "on-scroll-down": "brightnessctl set 5%-"
+    },
+
+    "pulseaudio": {
+        "format": "{icon} {volume}%",
+        "format-muted": " mute",
+        "format-icons": { "default": ["", ""] },
+        "on-click": "kitty --class float-term -e pulsemixer"
+    },
+
+    "network": {
+        "format-wifi": " {signalStrength}%",
+        "format-ethernet": "ETH {ipaddr}",
+        "format-disconnected": " offline",
+        "tooltip-format-wifi": "{essid}  {ipaddr}  ({signalStrength}%)",
+        "on-click": "kitty --class float-term -e nmtui"
+    },
+
+    "bluetooth": {
+        "format": "",
+        "format-disabled": "",
+        "format-connected": " {num_connections}",
+        "on-click": "kitty --class float-term -e bluetui"
+    },
+
+    "battery": {
+        "states": { "warning": 25, "critical": 12 },
+        "format": "{icon} {capacity}%",
+        "format-charging": " {capacity}%",
+        "format-plugged": " {capacity}%",
+        "format-icons": ["", "", "", "", ""],
+        "tooltip-format": "{timeTo}  ({power}W)",
+        "interval": 20
+    },
+
+    "tray": { "spacing": 8 },
+
+    "custom/power": {
+        "format": "",
+        "tooltip": false,
+        "on-click": "~/.local/bin/powermenu"
+    }
+}

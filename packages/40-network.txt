@@ -1,0 +1,43 @@
+# Networking engineer toolbox
+nmap
+wireshark-qt
+wireshark-cli       # tshark
+tcpdump
+termshark
+mtr
+traceroute
+iperf3
+bind                # dig, nslookup, host
+whois
+socat
+openbsd-netcat
+ethtool
+iw
+nftables
+wireguard-tools
+openvpn
+openconnect
+strongswan
+picocom             # consolă serială (Cisco/Juniper/switch-uri)
+minicom
+screen
+ngrep
+iftop
+bmon
+nethogs
+nload
+vnstat
+arp-scan
+ipcalc
+tcpreplay
+net-snmp
+frr                 # suite de routing (BGP/OSPF) pentru laborator
+bird
+freerdp
+
+# laborator / virtualizare (serviciile NU pornesc automat, ca să nu consume baterie)
+qemu-desktop
+edk2-ovmf
+libvirt
+dnsmasq
+virt-manager

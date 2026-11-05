@@ -1,0 +1,59 @@
+# Desktop Hyprland + aplicații orientate pe tastatură
+hyprland
+hyprland-guiutils   # necesar pentru safe mode / welcome din start-hyprland
+hyprlock
+hypridle
+xdg-desktop-portal-hyprland
+xdg-desktop-portal-gtk
+hyprpolkitagent
+waybar
+swaybg              # wallpaper (simplu, stabil, consum minim)
+kitty
+wofi                # launcher / meniuri
+mako                # notificări
+grim
+slurp
+wl-clipboard
+cliphist            # istoric clipboard
+qt5-wayland
+qt6-wayland
+mesa
+vulkan-intel
+intel-media-driver  # accelerare video HW (HD 520)
+libva-utils
+dconf               # persistă setările gsettings (tema dark pentru GTK)
+
+# audio
+pipewire
+pipewire-alsa
+pipewire-pulse
+pipewire-jack
+wireplumber
+pulsemixer          # mixer TUI
+playerctl
+
+# aplicații (tastatură-first)
+firefox
+qutebrowser         # browser controlat integral din tastatură
+yazi                # file manager TUI
+ffmpeg
+poppler
+imagemagick
+zathura             # PDF cu taste vim
+zathura-pdf-mupdf
+imv                 # vizualizator imagini
+mpv
+bluetui             # bluetooth TUI
+
+# aspect
+adwaita-icon-theme
+adwaita-cursors
+gnome-themes-extra
+papirus-icon-theme
+
+# fonturi
+ttf-jetbrains-mono-nerd
+ttf-dejavu
+noto-fonts
+noto-fonts-emoji
+ttf-liberation

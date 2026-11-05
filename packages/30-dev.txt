@@ -1,0 +1,72 @@
+# Software development
+git
+github-cli
+git-delta
+lazygit
+tig
+tmux
+zsh-autosuggestions
+zsh-syntax-highlighting
+zsh-completions
+starship
+fzf
+zoxide
+eza
+bat
+ripgrep
+fd
+jq
+yq
+httpie
+direnv
+tealdeer
+hyperfine
+tokei
+shellcheck
+shfmt
+
+# editor
+neovim
+code                # VS Code (build open-source, din repo oficial)
+
+# limbaje
+python
+python-pip
+python-pipx
+python-virtualenv
+uv
+nodejs
+npm
+pnpm
+rustup
+go
+jdk-openjdk
+maven
+gcc
+clang
+cmake
+ninja
+make
+meson
+gdb
+lldb
+valgrind
+strace
+ltrace
+
+# LSP-uri (folosite de neovim)
+pyright
+typescript-language-server
+rust-analyzer
+gopls
+bash-language-server
+lua-language-server
+ruff
+
+# containere / DevOps
+docker
+docker-compose
+docker-buildx
+kubectl
+ansible
+sqlite

@@ -1,0 +1,20 @@
+# Instalat cu pacstrap din Arch ISO (sistemul minim bootabil + ce trebuie în chroot)
+base
+linux
+linux-firmware
+intel-ucode
+base-devel
+git
+neovim
+networkmanager
+sudo
+grub
+efibootmgr
+stow
+zsh
+terminus-font
+man-db
+man-pages
+cryptsetup
+e2fsprogs
+dosfstools

@@ -1,0 +1,4 @@
+# Pachete AUR — instalate de post-install.sh cu yay, la primul start
+wl-kbptr            # mouse controlat din tastatură (hint-uri pe ecran)
+wiremix             # mixer audio TUI pentru PipeWire
+seclists            # wordlist-uri pentru testare (mare, ~1GB; scoate dacă nu vrei)

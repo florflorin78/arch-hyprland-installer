@@ -1,160 +1,86 @@
-# arch-install-hyprland
+# arch-hyprland-x270
 
-Automated Arch Linux + Hyprland installer. Hardware-agnostic: storage type
-(HDD, SATA SSD, or NVMe M.2), CPU vendor (Intel/AMD microcode), and GPU vendor
-(Intel/AMD/Nvidia driver) are all detected automatically at install time, with
-instant boot via GRUB and a Plymouth splash screen in place of a text console.
+Arch Linux + Hyprland pentru ThinkPad X270 (i5-6200U, HD 520, 8–32 GB RAM): dark neon, fără mouse,
+autonomie maximă, cu toolbox de dezvoltare, networking și security.
 
-Originally developed for a ThinkPad X270 (Intel i5-6200U, Intel HD 520), the
-installer runs unmodified on any UEFI x86_64 system.
-
-## Design principles
-
-1. **Installer stays opinion-free.** `install-base.sh`, `chroot-config.sh`, and
-   `post-install.sh` produce a minimal, working Hyprland session — no
-   pre-selected keybindings or themes.
-2. **Configuration happens post-install**, on the running system.
-3. **Finalized configuration is committed to `dotfiles/`**, so subsequent
-   reinstalls apply it automatically via `post-install.sh`.
-
-## Installation
-
-### 1. Boot the Arch ISO
-
-If the system boots in Legacy/CSM mode instead of UEFI, enter firmware setup
-(F1 on ThinkPad), set Boot Mode to `UEFI Only` under Startup, disable CSM if
-present separately, save, and reboot. Verify with `ls /sys/firmware/efi`.
-
-### 2. Connect to the network
-
-Ethernet is automatic. For Wi-Fi:
+## Instalare (din Arch ISO, UEFI)
 
 ```bash
-iwctl
+# 1. conectează-te la internet (Wi-Fi: iwctl), apoi:
+curl -fsSL https://raw.githubusercontent.com/florflorin78/arch-hyprland-x270/main/bootstrap.sh | bash
 ```
 
-```
-device list
-station wlan0 scan
-station wlan0 get-networks
-station wlan0 connect "SSID"
-exit
-```
+Installer-ul te întreabă: disc, hostname, utilizator, fus orar, LUKS (da/nu), parole. Restul e automat.
+La **primul login** în Hyprland se deschide un terminal care termină setup-ul (AUR, neovim, git, SSH).
 
-SSIDs containing spaces must be quoted as shown above.
+### Test în VirtualBox înainte de laptop
+Settings → System → **Enable EFI**, minim 4 GB RAM, 30 GB disc, 3D acceleration pornit.
+(În VM nu vei vedea autonomia bateriei; TLP și resturile tot se aplică.)
 
-Verify connectivity:
+## Structura
 
-```bash
-ping -c1 archlinux.org
-```
-
-### 3. Run the base installer
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/florflorin78/arch-hyprland-installer/main/install-base.sh -o install-base.sh
-bash install-base.sh
-```
-
-Download to a file first, then execute — piping directly into `bash`
-(`curl ... | bash`) breaks interactive `read` prompts, since stdin is consumed
-by the pipe rather than the terminal.
-
-The script detects disk type (HDD/SSD) and partition naming convention
-(NVMe vs. SATA) automatically, prompts for the target disk, requires explicit
-confirmation before wiping it, and prompts for hostname and username.
-
-### 4. Reboot
-
-```bash
-umount -R /mnt
-reboot
-```
-
-### 5. Post-install (after first login)
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/florflorin78/arch-hyprland-installer/main/post-install.sh -o post-install.sh
-bash post-install.sh
-```
-
-### 6. Final reboot
-
-```bash
-reboot
-```
-
-Result: instant boot → Plymouth splash → SDDM → Hyprland.
-
-## Repository structure
-
-```
-install-base.sh       Partitioning (HDD/SSD/NVMe-agnostic), pacstrap, invokes chroot-config.sh
-chroot-config.sh       User setup, GRUB (instant boot), Plymouth, TRIM, NetworkManager
-post-install.sh        yay, package installation, zram, greetd, dotfiles application
-packages.txt           pacman package list
-packages-aur.txt        AUR package list
-plymouth-theme/         Boot splash theme
-dotfiles/                Post-install configuration, managed with GNU Stow
-```
-
-## Script reference
-
-### install-base.sh
-
-| Function | Purpose |
+| Fișier | Rol |
 |---|---|
-| `check_internet` | Verifies connectivity before proceeding |
-| `check_uefi` | Aborts if not booted in UEFI mode (required for GRUB EFI target) |
-| `list_disks` | Displays available block devices |
-| `detect_disk_type` | Reads `/sys/block/<disk>/queue/rotational` to classify HDD vs. SSD |
-| `detect_microcode_package` | Reads `/proc/cpuinfo` to select `intel-ucode` or `amd-ucode` |
-| `detect_gpu_vendor` | Parses `lspci` output to identify Intel/AMD/Nvidia GPU |
-| `partition_name` | Resolves correct partition suffix for NVMe (`p1`) vs. SATA (`1`) |
-| `partition_and_format` | Creates GPT layout: 512MB FAT32 EFI partition + ext4 root |
-| `install_base_system` | `pacstrap` with base packages and detected microcode, generates fstab |
+| `bootstrap.sh` | clonează repo-ul și pornește installer-ul |
+| `install-base.sh` | live ISO: disc, partiții, LUKS, pacstrap, fstab |
+| `chroot-config.sh` | în chroot: pachete, GRUB+temă, Plymouth, greetd, servicii, dotfiles |
+| `post-install.sh` | primul login: yay, AUR, neovim, git, SSH |
+| `packages/*.txt` | liste de pachete (adaugi un nume pe linie) |
+| `dotfiles/` | pachete GNU Stow → `~` (`scripts/stow-all.sh` le reaplică) |
+| `system/etc/` | copiat în `/etc` (TLP, sysctl, zram, logind, greetd...) |
+| `assets/generate_wallpaper.py` | regenerează wallpaper + fundal GRUB + logo Plymouth |
 
-### chroot-config.sh
+## Shortcut-uri (SUPER = tasta Windows). Lista completă și căutabilă: **SUPER + F1**
 
-| Function | Purpose |
+| Tastă | Acțiune |
 |---|---|
-| `configure_locale` | Prompts for timezone, generates locale, sets console keymap |
-| `configure_hostname` | `/etc/hostname` and `/etc/hosts` |
-| `create_user` | User creation with `wheel` group membership |
-| `configure_sudo` | Enables `sudo` for the `wheel` group |
-| `install_grub` | GRUB installation, UEFI target |
-| `configure_instant_boot` | `GRUB_TIMEOUT=0`, hidden menu |
-| `install_gpu_driver` | Installs mesa + vendor-specific driver (Intel/AMD/Nvidia) based on detected hardware |
-| `install_plymouth` | Boot splash: early KMS module load (vendor-specific) to avoid resolution-switch flicker |
-| `optimize_boot_time` | Reduced kernel log verbosity, disabled `NetworkManager-wait-online` |
-| `configure_trim` | Enables `fstrim.timer` conditionally on SSD |
-| `enable_network_manager` | Enables NetworkManager service |
+| `SUPER+Enter` | terminal (kitty) |
+| `SUPER+D` / `SUPER+SHIFT+D` | launcher aplicații / rulează comandă |
+| `SUPER+B` / `SUPER+SHIFT+B` | Firefox / qutebrowser (browser din tastatură) |
+| `SUPER+E` | file manager yazi |
+| `SUPER+C` | VS Code |
+| `SUPER+N` / `A` / `Y` | rețea (nmtui) / mixer audio / bluetooth |
+| `SUPER+V` | istoric clipboard |
+| `SUPER+M` | mouse din tastatură (wl-kbptr, hint-uri pe ecran) |
+| `SUPER+Q` | închide fereastra |
+| `SUPER+F` / `SUPER+Space` | fullscreen / plutitor |
+| `SUPER+h j k l` (sau săgeți) | focus între ferestre |
+| `SUPER+SHIFT+h j k l` | mută fereastra |
+| `SUPER+CTRL+h j k l` | redimensionează (ține apăsat) |
+| `SUPER+1..0` / `SUPER+SHIFT+1..0` | workspace / mută fereastra pe workspace |
+| `SUPER+Tab`, `SUPER+[` `]` | workspace următor / anterior |
+| `ALT+Tab` | următoarea fereastră |
+| `SUPER+S` / `SUPER+SHIFT+S` | scratchpad / trimite în scratchpad |
+| `Print` / `SUPER+Print` | screenshot ecran / regiune |
+| `SUPER+Esc` | blochează ecranul |
+| `SUPER+SHIFT+E` (sau butonul Power) | meniu oprire / repornire / suspend / logout |
+| `SUPER+F10` | **eco mode** (baterie maximă) |
+| `Alt+Shift` | schimbă layout tastatură `us` ↔ `ro` |
+| `SUPER+SHIFT+R` | reîncarcă config Hyprland |
+| Taste Fn | volum, mute, microfon, luminozitate (cu notificare) |
 
-### post-install.sh
+În kitty: `Ctrl+Shift+T` tab nou, `Ctrl+Shift+←/→` între taburi, `Alt+1..5` salt la tab,
+`Ctrl+Shift+\` / `Ctrl+Shift+-` split vertical/orizontal, `Ctrl+Alt+h j k l` între splituri,
+`Ctrl+Shift+E` deschide linkuri cu hint-uri. În tmux: prefix `Ctrl+a`.
 
-Installs `yay`, applies `packages.txt` / `packages-aur.txt`, configures zram
-(compressed swap), enables SDDM display manager, and applies `dotfiles/` via
-`stow` if present.
+## Baterie
 
-## Modification reference
+Setările sunt în `system/etc/tlp.d/10-x270.conf` (CPU powersave, boost oprit pe baterie, plafon 60%,
+PCIe ASPM, USB/Wi-Fi/audio power save, SATA min_power) plus `thermald`, zram, `nowatchdog`,
+`vm.dirty_writeback`, luminozitate redusă automat de hypridle și blur/umbre oprite pe baterie.
+`SUPER+F10` oprește și animațiile și coboară luminozitatea la 30%.
 
-| To change... | Edit... |
-|---|---|
-| Installed packages | `packages.txt` / `packages-aur.txt` |
-| Timezone / locale | `chroot-config.sh` → `configure_locale` |
-| Boot splash appearance | `plymouth-theme/arch-install-hyprland.script` |
-| GRUB timeout behavior | `chroot-config.sh` → `configure_instant_boot` |
-| Partition layout | `install-base.sh` → `partition_and_format` |
-| Default shell | `chroot-config.sh` → `create_user` |
-| Session manager | `post-install.sh`, SDDM section |
-| Hyprland configuration | `dotfiles/hypr/` (populated post-configuration) |
+- Compilări grele pe baterie: `sudo tlp ac` (profil de priză temporar).
+- Verificare: `sudo tlp-stat -s -b`, `sudo powertop` (doar citire).
+- **BIOS:** Config → Power → Sleep State → **Linux** (S3). Altfel suspend-ul consumă mult.
+- Cea mai mare scădere de consum după asta vine de la un SSD/NVMe și luminozitatea ecranului.
+- Limitarea încărcării la 80% (viață mai lungă a bateriei) e în fișier, comentată.
 
-## Known issues and resolutions
+## Dacă ceva nu merge
 
-| Symptom | Cause | Resolution |
-|---|---|---|
-| `read` doesn't wait for input; script exits silently | `curl \| bash` consumes stdin via the pipe | Download with `-o`, then execute the file directly |
-| `iwctl` fails to connect to an SSID with spaces | Missing quoting | `station wlan0 connect "SSID With Spaces"` |
-| UEFI check fails | Firmware in Legacy/CSM mode | Set Boot Mode to `UEFI Only` in firmware setup |
-| `git push` rejected (non-fast-forward) | Local and remote branches diverged | `git pull origin <branch>`, resolve, then push |
-| `git pull` requires reconciliation strategy | Modern git requires explicit merge/rebase config | `git config pull.rebase false`, then pull again |
+- Erori de config Hyprland: `hyprctl configerrors`. Config-ul e în **Lua** (`hyprland.lua`), cum cere
+  Hyprland ≥ 0.55; sintaxa se mai schimbă între versiuni: https://wiki.hypr.land
+- Pachete care nu s-au putut instala: `/var/log/arch-hyprland-failed-packages.log` și
+  `~/arch-hyprland-failed-aur.log`.
+- Reaplică dotfiles: `~/arch-hyprland-x270/scripts/stow-all.sh`.
+- Security tools: folosește-le doar pe sisteme și rețele pe care ai autorizare (laborator propriu, CTF, contract).

@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# keybinds-help — arată TOATE shortcut-urile, generate live din Hyprland (hyprctl binds).
+# Tastează ca să filtrezi (căutare fuzzy). Orice adaugi în hyprland.lua cu descriere apare aici.
+hyprctl binds -j | jq -r '
+    def mods: . as $m | [
+        (select(($m/64|floor)%2==1) | "SUPER"),
+        (select(($m/4|floor)%2==1)  | "CTRL"),
+        (select(($m/8|floor)%2==1)  | "ALT"),
+        (select(($m/1|floor)%2==1)  | "SHIFT")
+    ];
+    [ .[] | select((.description // "") != "")
+          | ([(.modmask | mods[]), .key] | join(" + ")) + "\t" + .description ]
+    | sort | .[]
+' | column -t -s $'\t' | wofi --dmenu --prompt "Shortcut-uri" --width 820 --height 640 >/dev/null

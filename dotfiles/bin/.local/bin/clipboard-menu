@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# clipboard-menu — alege din istoricul clipboard (cliphist) și copiază din nou
+cliphist list | wofi --dmenu --prompt "Clipboard" --width 700 --height 450 | cliphist decode | wl-copy

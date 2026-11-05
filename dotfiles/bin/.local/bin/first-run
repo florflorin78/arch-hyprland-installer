@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# first-run — la primul login în Hyprland deschide un terminal care rulează post-install.sh
+# (yay, pachete AUR, plugin-uri neovim, git, SSH). După succes nu mai pornește.
+marker="$HOME/.local/state/arch-hyprland/first-run-done"
+[[ -e $marker ]] && exit 0
+
+exec kitty --class float-term --title "Primul start — finalizare instalare" \
+    -e bash -lc '"$HOME/arch-hyprland-x270/post-install.sh"; echo; read -rp "Apasă Enter pentru a închide..."'

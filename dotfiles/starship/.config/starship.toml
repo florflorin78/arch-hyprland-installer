@@ -1,0 +1,41 @@
+add_newline = true
+command_timeout = 500
+
+format = "$directory$git_branch$git_status$python$rust$nodejs$golang$docker_context$cmd_duration$line_break$character"
+
+[character]
+success_symbol = "[❯](bold #ff2e63)"
+error_symbol = "[❯](bold #f5c542)"
+
+[directory]
+style = "bold #08d9d6"
+truncation_length = 3
+truncation_symbol = "…/"
+
+[git_branch]
+symbol = " "
+style = "bold #8c3cff"
+
+[git_status]
+style = "#ff2e63"
+
+[cmd_duration]
+min_time = 2000
+style = "#8d93aa"
+format = "[ took $duration]($style)"
+
+[python]
+format = "[ py $version]($style)"
+style = "#f5c542"
+
+[rust]
+format = "[ rs $version]($style)"
+style = "#ff6b8f"
+
+[nodejs]
+format = "[ node $version]($style)"
+style = "#7be495"
+
+[golang]
+format = "[ go $version]($style)"
+style = "#08d9d6"

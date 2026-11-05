@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=Hacker Linux
+Description=Emblemă minimală care pulsează pe fundal întunecat
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/hackerlinux
+ScriptFile=/usr/share/plymouth/themes/hackerlinux/hackerlinux.script

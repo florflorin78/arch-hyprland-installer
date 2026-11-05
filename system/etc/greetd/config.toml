@@ -1,0 +1,6 @@
+[terminal]
+vt = 1
+
+[default_session]
+command = "tuigreet --time --remember --remember-session --asterisks --greeting 'ARCH // X270' --theme 'border=magenta;text=cyan;prompt=red;time=magenta;action=cyan;button=yellow;container=black;input=white' --cmd start-hyprland"
+user = "greeter"

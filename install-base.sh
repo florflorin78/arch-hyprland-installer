@@ -1,214 +1,151 @@
 #!/usr/bin/env bash
-#
-# install-base.sh
-#
-# Base system installer for arch-install-hyprland. Run from the Arch Linux
-# live ISO as root. Hardware-agnostic: storage type (HDD/SATA SSD/NVMe),
-# CPU vendor (Intel/AMD microcode), and GPU vendor (Intel/AMD/Nvidia driver)
-# are all detected automatically at runtime.
-#
-set -euo pipefail
+# install-base.sh — PASUL 1, rulează din Arch ISO (live).
+# Face: alegere disc -> partiționare -> (LUKS) -> formatare -> pacstrap -> fstab
+#       -> copiază repo-ul în noul sistem -> pornește chroot-config.sh în chroot.
+set -Eeuo pipefail
 
-GITHUB_USER="florflorin78"
-REPO="arch-hyprland-installer"
-BRANCH="main"
-RAW_BASE="https://raw.githubusercontent.com/${GITHUB_USER}/${REPO}/${BRANCH}"
+SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+# shellcheck source=lib/common.sh
+source "$SCRIPT_DIR/lib/common.sh"
+trap 'die "Eroare la linia $LINENO: $BASH_COMMAND"' ERR
 
-# ---------------------------------------------------------------------------
-# Preflight checks
-# ---------------------------------------------------------------------------
+# ---------------------------------------------------------------- verificări
+verifica_root
+verifica_uefi
+verifica_internet
 
-check_internet() {
-    if ping -c1 -W2 archlinux.org &>/dev/null; then
-        echo "[OK]    Internet connection verified."
-    else
-        echo "[ERROR] No internet connection. Connect and retry."
-        exit 1
-    fi
+cat <<'BANNER'
+
+   ___           __      __  __                  __                __
+  / _ |  ____ __/ /     / / / /_ _____  ____ ___/ /__ ____  ___/ /
+ / __ | / __/ // _ \   / /_/ / // / _ \/ __// _  / _ `/ _ \/ _  /
+/_/ |_|/_/  \___/_//_/ \____/\_, / .__/_/   \_,_/\_,_/_//_/\_,_/
+                            /___/_/        ThinkPad X270 edition
+
+BANNER
+
+# ---------------------------------------------------------------- alegere disc
+alege_disc() {
+    titlu "Alegere disc"
+    local iso_src iso_disk=""
+    iso_src=$(findmnt -no SOURCE /run/archiso/bootmnt 2>/dev/null || true)
+    [[ -n $iso_src ]] && iso_disk=$(lsblk -no PKNAME "$iso_src" 2>/dev/null | head -1 || true)
+
+    local -a discuri=()
+    local d
+    while read -r d; do
+        [[ -n $iso_disk && $d == "/dev/$iso_disk" ]] && continue   # nu șterge stick-ul de instalare
+        discuri+=("$d")
+    done < <(lsblk -dpno NAME,TYPE | awk '$2=="disk"{print $1}')
+
+    ((${#discuri[@]} > 0)) || die "Nu am găsit niciun disc."
+
+    local i=1
+    for d in "${discuri[@]}"; do
+        printf '  %d) %s  %s\n' "$i" "$d" "$(lsblk -dpno SIZE,MODEL,TRAN "$d" | xargs)"
+        ((i++))
+    done
+    local n
+    read -r -p "Număr disc: " n
+    [[ $n =~ ^[0-9]+$ ]] && ((n >= 1 && n <= ${#discuri[@]})) || die "Alegere invalidă."
+    DISC=${discuri[n-1]}
+
+    lsblk "$DISC"
+    warn "TOATE datele de pe $DISC vor fi ȘTERSE."
+    local conf
+    read -r -p "Scrie exact calea discului ($DISC) ca să confirmi: " conf
+    [[ $conf == "$DISC" ]] || die "Confirmare greșită, mă opresc."
 }
 
-check_uefi() {
-    if [ -d /sys/firmware/efi ]; then
-        echo "[OK]    UEFI boot mode confirmed."
-    else
-        echo "[ERROR] System is not booted in UEFI mode. GRUB with graphical"
-        echo "        theming requires UEFI. Enable UEFI in firmware settings"
-        echo "        and reboot from the installation media."
-        exit 1
-    fi
-}
+# numele partițiilor: /dev/sda1 dar /dev/nvme0n1p1
+part() { [[ $1 =~ [0-9]$ ]] && echo "${1}p$2" || echo "${1}$2"; }
 
-list_disks() {
-    echo
-    echo "Available disks:"
-    lsblk -d -o NAME,SIZE,ROTA,MODEL
-    echo
-}
+alege_disc
 
-# Returns HDD or SSD by reading /sys/block/<disk>/queue/rotational (1 = HDD, 0 = SSD)
-detect_disk_type() {
-    local disk="$1"
-    local rota_file="/sys/block/${disk}/queue/rotational"
+titlu "Setări sistem"
+intreaba HOSTNAME "Hostname" "x270"
+while :; do
+    intreaba USERNAME "Nume utilizator (litere mici)" ""
+    [[ $USERNAME =~ ^[a-z_][a-z0-9_-]{0,30}$ ]] && break
+    warn "Nume invalid."
+done
+intreaba TIMEZONE "Fus orar" "Europe/Bucharest"
+[[ -f /usr/share/zoneinfo/$TIMEZONE ]] || die "Fus orar inexistent: $TIMEZONE"
+if confirma "Criptez discul cu LUKS (recomandat pe laptop)?"; then LUKS=yes; else LUKS=no; fi
 
-    if [ ! -f "$rota_file" ]; then
-        echo "unknown"
-        return
-    fi
+# ---------------------------------------------------------------- pregătire live
+titlu "Pregătire mediu live"
+timedatectl set-ntp true || warn "NTP nu a pornit"
+sed -i -e 's/^#Color/Color/' -e 's/^#ParallelDownloads.*/ParallelDownloads = 10/' /etc/pacman.conf
+info "Optimizez mirror-urile (max 90s)..."
+timeout 90 reflector --country Romania,Germany,Austria,Hungary,Bulgaria --protocol https \
+    --latest 15 --sort rate --save /etc/pacman.d/mirrorlist || warn "reflector a eșuat, folosesc mirror-urile existente"
 
-    if [ "$(cat "$rota_file")" -eq 1 ]; then
-        echo "HDD"
-    else
-        echo "SSD"
-    fi
-}
+# ---------------------------------------------------------------- partiționare
+titlu "Partiționare $DISC"
+swapoff -a || true
+umount -R /mnt 2>/dev/null || true
+wipefs -af "$DISC"
+sgdisk --zap-all "$DISC"
+sgdisk -n1:0:+1G -t1:ef00 -c1:ESP "$DISC"
+if [[ $LUKS == yes ]]; then
+    sgdisk -n2:0:0 -t2:8309 -c2:cryptroot "$DISC"
+else
+    sgdisk -n2:0:0 -t2:8300 -c2:root "$DISC"
+fi
+partprobe "$DISC"
+udevadm settle
+sleep 1
 
-# Returns intel-ucode or amd-ucode based on CPU vendor. Falls back to no
-# microcode package on unrecognized vendors (e.g. virtual machines).
-detect_microcode_package() {
-    local vendor
-    vendor=$(grep -m1 "vendor_id" /proc/cpuinfo | awk '{print $NF}')
+P_ESP=$(part "$DISC" 1)
+P_ROOT=$(part "$DISC" 2)
+LUKS_UUID=""
+ROOT_DEV=$P_ROOT
 
-    case "$vendor" in
-        GenuineIntel) echo "intel-ucode" ;;
-        AuthenticAMD) echo "amd-ucode" ;;
-        *) echo "" ;;
-    esac
-}
+if [[ $LUKS == yes ]]; then
+    titlu "LUKS2 pe $P_ROOT"
+    info "Alege o parolă de criptare puternică. Fără ea datele NU se pot recupera."
+    cryptsetup luksFormat --type luks2 "$P_ROOT"
+    cryptsetup open "$P_ROOT" cryptroot
+    LUKS_UUID=$(blkid -s UUID -o value "$P_ROOT")
+    ROOT_DEV=/dev/mapper/cryptroot
+fi
 
-# Returns intel, amd, nvidia, or unknown based on the primary GPU detected via lspci.
-detect_gpu_vendor() {
-    local gpu_line
-    gpu_line=$(lspci -mm 2>/dev/null | grep -Ei "VGA|3D controller" | head -n1)
+# ---------------------------------------------------------------- formatare + montare
+titlu "Formatare"
+mkfs.fat -F32 -n ESP "$P_ESP"
+mkfs.ext4 -F -L arch "$ROOT_DEV"
+mount -o noatime "$ROOT_DEV" /mnt
+mount --mkdir -o umask=0077 "$P_ESP" /mnt/boot   # ESP = /boot (kernelul stă pe FAT32, e ok)
 
-    if echo "$gpu_line" | grep -qi "intel"; then
-        echo "intel"
-    elif echo "$gpu_line" | grep -qi "amd\|ati"; then
-        echo "amd"
-    elif echo "$gpu_line" | grep -qi "nvidia"; then
-        echo "nvidia"
-    else
-        echo "unknown"
-    fi
-}
+# ---------------------------------------------------------------- pacstrap
+titlu "pacstrap (sistemul de bază)"
+mapfile -t BASE_PKGS < <(citeste_lista "$SCRIPT_DIR/packages/00-base.txt")
+pacstrap -K /mnt "${BASE_PKGS[@]}"
 
-# ---------------------------------------------------------------------------
-# Partition naming helper
-# ---------------------------------------------------------------------------
-# NVMe/eMMC devices use a "p" separator before the partition number
-# (nvme0n1p1); SATA/virtio devices do not (sda1).
-partition_name() {
-    local disk="$1"
-    local number="$2"
+genfstab -U /mnt >> /mnt/etc/fstab
+ok "fstab generat"
 
-    if [[ "$disk" == *nvme* ]] || [[ "$disk" == *mmcblk* ]]; then
-        echo "${disk}p${number}"
-    else
-        echo "${disk}${number}"
-    fi
-}
+# ---------------------------------------------------------------- repo + config pentru chroot
+titlu "Copiez repo-ul în noul sistem"
+rm -rf /mnt/root/arch-hyprland-x270
+cp -a "$SCRIPT_DIR" /mnt/root/arch-hyprland-x270
+{
+    printf 'HOSTNAME=%q\n'  "$HOSTNAME"
+    printf 'USERNAME=%q\n'  "$USERNAME"
+    printf 'TIMEZONE=%q\n'  "$TIMEZONE"
+    printf 'LUKS=%q\n'      "$LUKS"
+    printf 'LUKS_UUID=%q\n' "$LUKS_UUID"
+} > /mnt/root/install.conf
+chmod 600 /mnt/root/install.conf
 
-# ---------------------------------------------------------------------------
-# Partitioning and formatting
-# ---------------------------------------------------------------------------
+titlu "Intru în chroot"
+arch-chroot /mnt bash /root/arch-hyprland-x270/chroot-config.sh
 
-partition_and_format() {
-    local disk_path="$1"
-
-    echo "Partitioning ${disk_path} (GPT: EFI system partition + root)..."
-    parted -s "$disk_path" mklabel gpt
-    parted -s "$disk_path" mkpart ESP fat32 1MiB 513MiB
-    parted -s "$disk_path" set 1 esp on
-    parted -s "$disk_path" mkpart primary ext4 513MiB 100%
-
-    local disk_name
-    disk_name=$(basename "$disk_path")
-    BOOT_PART="/dev/$(partition_name "$disk_name" 1)"
-    ROOT_PART="/dev/$(partition_name "$disk_name" 2)"
-
-    echo "Formatting EFI partition (${BOOT_PART}) as FAT32..."
-    mkfs.fat -F32 "$BOOT_PART"
-
-    echo "Formatting root partition (${ROOT_PART}) as ext4..."
-    mkfs.ext4 -F "$ROOT_PART"
-
-    echo "Mounting target filesystem at /mnt..."
-    mount "$ROOT_PART" /mnt
-    mkdir -p /mnt/boot
-    mount "$BOOT_PART" /mnt/boot
-
-    export BOOT_PART ROOT_PART
-}
-
-# ---------------------------------------------------------------------------
-# Base system installation
-# ---------------------------------------------------------------------------
-
-install_base_system() {
-    echo "Installing base system (pacstrap)..."
-
-    local microcode_pkg="$1"
-    pacstrap -K /mnt base linux linux-firmware base-devel ${microcode_pkg} \
-        networkmanager sudo vim git stow grub efibootmgr pciutils
-
-    echo "Generating fstab..."
-    genfstab -U /mnt >> /mnt/etc/fstab
-}
-
-# ---------------------------------------------------------------------------
-# Main
-# ---------------------------------------------------------------------------
-
-main() {
-    echo "== arch-install-hyprland: base installation =="
-    echo
-
-    check_internet
-    check_uefi
-    list_disks
-
-    read -rp "Target disk (e.g. sda or nvme0n1, without /dev/): " DISK_NAME
-    DISK_PATH="/dev/${DISK_NAME}"
-
-    if [ ! -b "$DISK_PATH" ]; then
-        echo "[ERROR] ${DISK_PATH} is not a valid block device."
-        exit 1
-    fi
-
-    DISK_TYPE=$(detect_disk_type "$DISK_NAME")
-    echo "[INFO]  Detected disk type: ${DISK_TYPE}"
-    export DISK_TYPE
-
-    echo
-    echo "WARNING: all data on ${DISK_PATH} will be erased."
-    read -rp "Type 'ERASE' to continue: " CONFIRM
-    if [ "$CONFIRM" != "ERASE" ]; then
-        echo "Aborted by user."
-        exit 1
-    fi
-
-    read -rp "Hostname: " HOSTNAME
-    read -rp "Username: " USERNAME
-
-    MICROCODE_PKG=$(detect_microcode_package)
-    GPU_VENDOR=$(detect_gpu_vendor)
-    echo "[INFO]  Detected CPU microcode package: ${MICROCODE_PKG:-none}"
-    echo "[INFO]  Detected GPU vendor: ${GPU_VENDOR}"
-
-    partition_and_format "$DISK_PATH"
-    install_base_system "$MICROCODE_PKG"
-
-    echo "Fetching chroot-config.sh..."
-    curl -fsSL "https://raw.githubusercontent.com/florflorin78/arch-hyprland-installer/main/chroot-config.sh" -o /mnt/root/chroot-config.sh
-    chmod +x /mnt/root/chroot-config.sh
-
-    echo "Entering chroot for system configuration..."
-    arch-chroot /mnt /root/chroot-config.sh "$HOSTNAME" "$USERNAME" "$BOOT_PART" "$DISK_PATH" "$DISK_TYPE" "$GPU_VENDOR"
-
-    echo
-    echo "== Base installation complete =="
-    echo "Run 'umount -R /mnt' then 'reboot'."
-    echo "After first login, run post-install.sh as ${USERNAME}:"
-    echo "curl -fsSL https://raw.githubusercontent.com/florflorin78/arch-hyprland-installer/main/post-install.sh -o post-install.sh && bash post-install.sh"
-}
-
-main
+# ---------------------------------------------------------------- final
+titlu "Gata"
+rm -f /mnt/root/install.conf
+umount -R /mnt
+[[ $LUKS == yes ]] && cryptsetup close cryptroot
+ok "Instalare terminată. Scoate stick-ul USB."
+if confirma "Repornesc acum?"; then reboot; fi

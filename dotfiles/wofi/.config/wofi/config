@@ -1,0 +1,13 @@
+width=520
+height=380
+location=center
+prompt=
+insensitive=true
+allow_images=false
+no_actions=true
+hide_scroll=true
+matching=fuzzy
+term=kitty
+# navigare fără mouse (pe lângă săgeți)
+key_up=Ctrl-k
+key_down=Ctrl-j
