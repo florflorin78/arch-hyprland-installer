@@ -1,2 +1,2 @@
-# ~/.zshenv — singurul fișier zsh în $HOME; restul stă în ~/.config/zsh
+# only zsh file in $HOME; the rest lives in ~/.config/zsh
 export ZDOTDIR="$HOME/.config/zsh"

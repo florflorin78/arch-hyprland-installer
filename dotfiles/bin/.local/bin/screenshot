@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# screenshot full|region — salvează în ~/Pictures/Screenshots și copiază în clipboard
+# screenshot full|region|annotate — save to ~/Pictures/Screenshots and copy to clipboard
 set -eu
 dir="$HOME/Pictures/Screenshots"
 mkdir -p "$dir"
@@ -9,8 +9,11 @@ case ${1:-full} in
     full)   grim "$file" ;;
     region) geom=$(slurp) || exit 0
             grim -g "$geom" "$file" ;;
-    *)      echo "Folosire: screenshot full|region" >&2; exit 1 ;;
+    annotate) geom=$(slurp) || exit 0
+            grim -g "$geom" - | satty -f - --output-filename "$file" --copy-command wl-copy
+            exit 0 ;;
+    *)      echo "Usage: screenshot full|region|annotate" >&2; exit 1 ;;
 esac
 
 wl-copy < "$file"
-notify-send "Screenshot salvat" "$file"
+notify-send "Screenshot saved" "$file"

@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# wallpaper [next|FILE]: restore, cycle, or set a wallpaper (swaybg).
+dir="$HOME/Pictures/wallpapers"
+state="$HOME/.local/state/arch-hyprland/wallpaper"
+mapfile -t files < <(find "$dir" -maxdepth 1 -type f \( -name '*.png' -o -name '*.jpg' -o -name '*.jpeg' \) ! -name 'matrix-clean.png' | sort)
+((${#files[@]})) || exit 1
+if [[ -f ${1:-} ]]; then pkill -x swaybg; exec swaybg -i "$1" -m fill; fi
+cur=$(cat "$state" 2>/dev/null || echo 0)
+[[ ${1:-} == next ]] && cur=$(((cur + 1) % ${#files[@]}))
+echo "$cur" > "$state"
+pkill -x swaybg
+exec swaybg -i "${files[cur]}" -m fill

@@ -1,6 +1,6 @@
 [Plymouth Theme]
 Name=Hacker Linux
-Description=Emblemă minimală care pulsează pe fundal întunecat
+Description=Matrix-terminal boot splash: falling glyphs, boot log, progress bar
 ModuleName=script
 
 [script]

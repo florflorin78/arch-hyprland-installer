@@ -1,7 +1,7 @@
 font=JetBrainsMono Nerd Font 10
-background-color=#0b0b12ee
-text-color=#d7dae8
-border-color=#ff2e63
+background-color=#020a05ee
+text-color=#b8f5c8
+border-color=#39ff7a
 border-size=2
 border-radius=10
 padding=12
@@ -10,12 +10,15 @@ anchor=top-right
 width=340
 default-timeout=5000
 max-visible=4
-progress-color=over #ff2e63
+progress-color=over #39ff7a
 
 [urgency=low]
-border-color=#2a2a3a
+border-color=#0f3a1e
 
 [urgency=high]
-border-color=#ff2e63
+border-color=#ff4d4d
 text-color=#ffffff
 default-timeout=0
+
+[mode=do-not-disturb]
+invisible=1

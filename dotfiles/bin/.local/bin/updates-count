@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# Print the number of pending pacman updates (empty if none).
+n=$(checkupdates 2>/dev/null | wc -l)
+((n > 0)) && echo "$n"
+exit 0

@@ -1,0 +1,27 @@
+{
+    "logo": {
+        "type": "file",
+        "source": "~/.config/fastfetch/logo.txt",
+        "color": { "1": "light_green" },
+        "padding": { "right": 3 }
+    },
+    "display": {
+        "separator": "  ",
+        "color": { "keys": "green", "output": "light_green", "title": "light_green" }
+    },
+    "modules": [
+        "title",
+        { "type": "os", "key": "os    " },
+        { "type": "host", "key": "host  " },
+        { "type": "kernel", "key": "kernel" },
+        { "type": "uptime", "key": "uptime" },
+        { "type": "packages", "key": "pkgs  " },
+        { "type": "shell", "key": "shell " },
+        { "type": "wm", "key": "wm    " },
+        { "type": "terminal", "key": "term  " },
+        { "type": "cpu", "key": "cpu   " },
+        { "type": "memory", "key": "ram   " },
+        { "type": "disk", "key": "disk  " },
+        { "type": "battery", "key": "power " }
+    ]
+}

@@ -1,6 +1,6 @@
 # ~/.config/zsh/.zshrc
 
-# ---- istoric ----
+# ---- history ----
 HISTFILE="$HOME/.local/state/zsh_history"
 HISTSIZE=50000
 SAVEHIST=50000
@@ -11,13 +11,13 @@ setopt AUTO_CD AUTO_PUSHD PUSHD_IGNORE_DUPS INTERACTIVE_COMMENTS
 typeset -U path
 path=("$HOME/.local/bin" "$HOME/.cargo/bin" "$HOME/go/bin" $path)
 
-# ---- completare ----
+# ---- completion ----
 fpath=(/usr/share/zsh/site-functions $fpath)
 autoload -Uz compinit && compinit -d "$HOME/.cache/zcompdump"
 zstyle ':completion:*' menu select
 zstyle ':completion:*' matcher-list 'm:{a-z}={A-Za-z}'
 
-# ---- taste ----
+# ---- keys ----
 bindkey -e
 bindkey '^[[1;5C' forward-word
 bindkey '^[[1;5D' backward-word
@@ -25,13 +25,13 @@ bindkey '^[[3~'   delete-char
 bindkey '^[[H'    beginning-of-line
 bindkey '^[[F'    end-of-line
 
-# ---- plugin-uri (instalate din pacman) ----
+# ---- plugins (from pacman) ----
 for f in /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh \
          /usr/share/fzf/key-bindings.zsh /usr/share/fzf/completion.zsh; do
     [[ -r $f ]] && source "$f"
 done
 
-# ---- aliasuri ----
+# ---- aliases ----
 alias ls='eza --icons --group-directories-first'
 alias ll='eza -lah --icons --group-directories-first --git'
 alias lt='eza --tree --level=2 --icons'
@@ -51,13 +51,24 @@ alias update='sudo pacman -Syu'
 alias ports='ss -tulpn'
 alias myip='curl -s https://ifconfig.me; echo'
 alias reload='source ~/.config/zsh/.zshrc'
+alias ff='fastfetch'
+alias df='duf'
+alias du='ncdu'
+alias top='btm'
+alias calc='qalc'
 
-# ---- unelte ----
-export FZF_DEFAULT_OPTS='--height 40% --layout=reverse --border --color=bg+:#14141f,hl:#ff2e63,hl+:#ff2e63,pointer:#08d9d6,prompt:#08d9d6,info:#8d93aa'
+# ---- intro (once per login, in kitty) ----
+if [[ $TERM == xterm-kitty && -n ${XDG_RUNTIME_DIR:-} && ! -e $XDG_RUNTIME_DIR/intro-shown ]] && command -v fastfetch >/dev/null; then
+    : > "$XDG_RUNTIME_DIR/intro-shown"
+    fastfetch
+fi
+
+# ---- tools ----
+export FZF_DEFAULT_OPTS='--height 40% --layout=reverse --border --color=bg+:#06140b,hl:#39ff7a,hl+:#39ff7a,pointer:#22d36b,prompt:#22d36b,info:#5f8f6e'
 command -v zoxide   >/dev/null && eval "$(zoxide init zsh --cmd cd)"
 command -v direnv   >/dev/null && eval "$(direnv hook zsh)"
 command -v starship >/dev/null && eval "$(starship init zsh)"
 
-# syntax highlighting trebuie încărcat ULTIMUL
+# syntax highlighting must load last
 [[ -r /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]] \
     && source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh

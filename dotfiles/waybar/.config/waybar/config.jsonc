@@ -7,9 +7,9 @@
     "margin-right": 8,
     "spacing": 4,
 
-    "modules-left": ["hyprland/workspaces", "hyprland/window"],
+    "modules-left": ["hyprland/workspaces", "hyprland/window", "mpris"],
     "modules-center": ["clock"],
-    "modules-right": ["tray", "cpu", "memory", "temperature", "backlight", "pulseaudio", "network", "bluetooth", "battery", "hyprland/language", "custom/power"],
+    "modules-right": ["tray", "custom/updates", "idle_inhibitor", "custom/dnd", "cpu", "memory", "disk", "temperature", "backlight", "pulseaudio", "network", "bluetooth", "battery", "hyprland/language", "custom/power"],
 
     "hyprland/workspaces": {
         "format": "{id}",
@@ -83,6 +83,44 @@
         "format-icons": ["", "", "", "", ""],
         "tooltip-format": "{timeTo}  ({power}W)",
         "interval": 20
+    },
+
+    "mpris": {
+        "format": "{player_icon} {title} — {artist}",
+        "format-paused": "{status_icon} {title}",
+        "player-icons": { "default": "\uf001" },
+        "status-icons": { "paused": "\uf04c" },
+        "max-length": 40,
+        "ignored-players": ["firefox"]
+    },
+
+    "custom/updates": {
+        "exec": "~/.local/bin/updates-count",
+        "interval": 3600,
+        "format": "\uf021 {}",
+        "tooltip": false,
+        "on-click": "kitty --class float-term -e sh -c 'sudo pacman -Syu; read -rp \"Enter to close\"'"
+    },
+
+    "idle_inhibitor": {
+        "format": "{icon}",
+        "format-icons": { "activated": "\uf0f4", "deactivated": "\uf06e" },
+        "tooltip-format-activated": "Stay awake: ON",
+        "tooltip-format-deactivated": "Stay awake: off"
+    },
+
+    "custom/dnd": {
+        "exec": "~/.local/bin/dnd status",
+        "return-type": "json",
+        "interval": 5,
+        "on-click": "~/.local/bin/dnd toggle",
+        "tooltip": false
+    },
+
+    "disk": {
+        "format": "\uf0a0 {percentage_used}%",
+        "interval": 60,
+        "tooltip-format": "{used} / {total}"
     },
 
     "tray": { "spacing": 8 },

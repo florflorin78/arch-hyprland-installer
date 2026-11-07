@@ -8,6 +8,6 @@ no_actions=true
 hide_scroll=true
 matching=fuzzy
 term=kitty
-# navigare fără mouse (pe lângă săgeți)
+# mouse-free navigation
 key_up=Ctrl-k
 key_down=Ctrl-j

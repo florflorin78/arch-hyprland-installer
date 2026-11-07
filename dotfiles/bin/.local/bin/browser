@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Open the preferred browser: Zen, then Firefox, then Qutebrowser.
+for b in zen-browser zen zen-browser-bin firefox qutebrowser; do
+    command -v "$b" >/dev/null 2>&1 && exec "$b" "$@"
+done
+notify-send "browser" "No browser found (Zen installs at first login)."

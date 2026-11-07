@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# ocr: select a screen region, copy the recognized text to the clipboard.
+geom=$(slurp) || exit 0
+text=$(grim -g "$geom" - | tesseract stdin stdout 2>/dev/null)
+if [[ -n $text ]]; then
+    wl-copy <<<"$text"
+    notify-send "OCR copied" "${text:0:120}"
+else
+    notify-send "OCR" "no text found"
+fi

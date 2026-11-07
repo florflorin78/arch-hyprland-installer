@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# dnd toggle|status — do-not-disturb for mako (status prints waybar JSON).
+case ${1:-status} in
+    toggle) makoctl mode -t do-not-disturb >/dev/null ;;
+esac
+if makoctl mode | grep -qx do-not-disturb; then
+    echo '{"text":"","class":"on"}'
+else
+    echo '{"text":"","class":"off"}'
+fi

@@ -1,4 +1,4 @@
-# Security / pentest — DOAR pe sisteme și rețele pe care ai autorizare (laborator propriu, CTF, client cu contract)
+# Security / pentest — only on systems you are authorized to test
 aircrack-ng
 hashcat
 john
@@ -27,3 +27,5 @@ python-impacket
 python-scapy
 python-paramiko
 openssl
+
+zaproxy

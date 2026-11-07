@@ -1,44 +1,124 @@
-// Plymouth "hackerlinux": fundal închis, emblemă care pulsează, prompt pentru parola LUKS.
+// Matrix-terminal boot splash: falling glyph columns, boot log lines, progress bar, LUKS prompt.
 
-Window.SetBackgroundTopColor(0.027, 0.027, 0.047);
-Window.SetBackgroundBottomColor(0.027, 0.027, 0.047);
+Window.SetBackgroundTopColor(0.008, 0.039, 0.02);
+Window.SetBackgroundBottomColor(0.008, 0.039, 0.02);
 
+sw = Window.GetWidth();
+sh = Window.GetHeight();
+
+fun pseudo (seed) {
+    v = Math.Sin(seed * 12.9898) * 43758.5453;
+    v = v - Math.Int(v);
+    if (v < 0) v = v + 1;
+    return v;
+}
+
+// ---- falling columns ----
+rain_img[0] = Image("rain0.png");
+rain_img[1] = Image("rain1.png");
+rain_img[2] = Image("rain2.png");
+rain_img[3] = Image("rain3.png");
+
+step = 40;
+ncols = Math.Int(sw / step);
+for (c = 0; c < ncols; c++) {
+    kind = Math.Int(pseudo(c + 1) * 3.99);
+    col[c].h = rain_img[kind].GetHeight();
+    col[c].x = c * step + 10;
+    col[c].y = -pseudo(c + 50) * sh;
+    col[c].speed = 2 + pseudo(c + 90) * 5;
+    col[c].sprite = Sprite(rain_img[kind]);
+    col[c].sprite.SetOpacity(0.30 + pseudo(c + 130) * 0.45);
+    col[c].sprite.SetPosition(col[c].x, col[c].y, 1);
+}
+
+// ---- center panel ----
 logo.image = Image("logo.png");
 logo.sprite = Sprite(logo.image);
-logo.x = Window.GetWidth() / 2 - logo.image.GetWidth() / 2;
-logo.y = Window.GetHeight() / 2 - logo.image.GetHeight() / 2 - 40;
+logo.x = sw / 2 - logo.image.GetWidth() / 2;
+logo.y = sh / 2 - 230;
 logo.sprite.SetPosition(logo.x, logo.y, 10);
 
+lx = sw / 2 - 190;
+ly = sh / 2 + 10;
+panel = Sprite(Image("panel.png"));
+panel.SetPosition(lx - 20, ly - 14, 9);
+
+for (i = 0; i < 5; i++) {
+    if (i == 0) img = Image("line0.png");
+    if (i == 1) img = Image("line1.png");
+    if (i == 2) img = Image("line2.png");
+    if (i == 3) img = Image("line3.png");
+    if (i == 4) img = Image("line4.png");
+    line[i] = Sprite(img);
+    line[i].SetPosition(lx, ly + i * 32, 10);
+    line[i].SetOpacity(0);
+}
+line[0].SetOpacity(1);
+
+bar_bg = Sprite(Image("bar_bg.png"));
+bar_bg.SetPosition(lx, ly + 5 * 32 + 14, 10);
+bar_fill_img = Image("bar_fill.png");
+bar_fill = Sprite(bar_fill_img);
+bar_fill.SetPosition(lx + 2, ly + 5 * 32 + 16, 11);
+
+fun progress_callback (duration, progress) {
+    n = Math.Int(progress * 5) + 1;
+    if (n > 5) n = 5;
+    for (i = 0; i < 5; i++) {
+        if (i < n) line[i].SetOpacity(1);
+        else line[i].SetOpacity(0);
+    }
+    w = Math.Int(progress * 356);
+    if (w < 1) w = 1;
+    bar_fill.SetImage(bar_fill_img.Scale(w, 10));
+}
+Plymouth.SetBootProgressFunction(progress_callback);
+
+// ---- animation ----
 tick = 0;
 fun refresh_callback () {
     tick = tick + 1;
-    logo.sprite.SetOpacity(0.65 + 0.35 * Math.Sin(tick / 18));
+    for (c = 0; c < ncols; c++) {
+        col[c].y = col[c].y + col[c].speed;
+        if (col[c].y > sh) col[c].y = -col[c].h;
+        col[c].sprite.SetPosition(col[c].x, col[c].y, 1);
+    }
+    logo.sprite.SetOpacity(0.8 + 0.2 * Math.Sin(tick / 20));
 }
 Plymouth.SetRefreshFunction(refresh_callback);
 
-// ---- prompt parolă (necesar când discul e criptat cu LUKS) ----
-prompt.sprite = Sprite();
-bullets.sprite = Sprite();
+// ---- LUKS password prompt ----
+prompt.image = Image("prompt.png");
+prompt.sprite = Sprite(prompt.image);
+prompt.sprite.SetOpacity(0);
+py = ly + 5 * 32 + 52;
+prompt.sprite.SetPosition(lx, py, 12);
+
+hint.sprite = Sprite(Image("hint.png"));
+hint.sprite.SetOpacity(0);
+hint.sprite.SetPosition(lx, py + 34, 12);
+
+star_img = Image("star.png");
+for (i = 0; i < 40; i++) {
+    star[i] = Sprite(star_img);
+    star[i].SetOpacity(0);
+    star[i].SetPosition(lx + prompt.image.GetWidth() + i * 13, py, 12);
+}
 
 fun display_password_callback (prompt_text, bullet_count) {
-    label = Image.Text("Parola disc:", 0.55, 0.60, 0.78);
-    prompt.sprite.SetImage(label);
-    prompt.sprite.SetPosition(Window.GetWidth() / 2 - label.GetWidth() / 2,
-                              logo.y + logo.image.GetHeight() + 30, 10);
     prompt.sprite.SetOpacity(1);
-
-    stars = " ";
-    for (i = 0; i < bullet_count; i++) stars = stars + "*";
-    stars_img = Image.Text(stars, 1.0, 0.18, 0.39);
-    bullets.sprite.SetImage(stars_img);
-    bullets.sprite.SetPosition(Window.GetWidth() / 2 - stars_img.GetWidth() / 2,
-                               logo.y + logo.image.GetHeight() + 70, 10);
-    bullets.sprite.SetOpacity(1);
+    hint.sprite.SetOpacity(1);
+    for (i = 0; i < 40; i++) {
+        if (i < bullet_count) star[i].SetOpacity(1);
+        else star[i].SetOpacity(0);
+    }
 }
 Plymouth.SetDisplayPasswordFunction(display_password_callback);
 
 fun display_normal_callback () {
     prompt.sprite.SetOpacity(0);
-    bullets.sprite.SetOpacity(0);
+    hint.sprite.SetOpacity(0);
+    for (i = 0; i < 40; i++) star[i].SetOpacity(0);
 }
 Plymouth.SetDisplayNormalFunction(display_normal_callback);

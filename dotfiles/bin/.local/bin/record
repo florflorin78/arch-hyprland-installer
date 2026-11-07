@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# record: toggle screen recording of a selected region (wf-recorder) -> ~/Videos/Recordings
+if pgrep -x wf-recorder >/dev/null; then
+    pkill -INT -x wf-recorder
+    notify-send "Recording" "saved to ~/Videos/Recordings"
+    exit 0
+fi
+geom=$(slurp) || exit 0
+dir="$HOME/Videos/Recordings"
+mkdir -p "$dir"
+notify-send -t 1500 "Recording" "started (press again to stop)"
+exec wf-recorder -g "$geom" -f "$dir/$(date +%F_%H-%M-%S).mp4"

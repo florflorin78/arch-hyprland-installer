@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# powermenu — meniu wofi: blocare / suspend / logout / repornire / oprire
+# wofi power menu
 choice=$(printf '%s\n' "Lock" "Suspend" "Logout" "Reboot" "Shutdown" \
     | wofi --dmenu --prompt "Power" --width 320 --height 260) || exit 0
 

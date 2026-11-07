@@ -1,4 +1,4 @@
-# Instalat cu pacstrap din Arch ISO (sistemul minim bootabil + ce trebuie în chroot)
+# Installed with pacstrap from the ISO (minimal bootable system + chroot needs)
 base
 linux
 linux-firmware

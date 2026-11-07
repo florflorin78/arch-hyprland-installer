@@ -1,12 +1,9 @@
 #!/usr/bin/env bash
-# power-watch — adaptează efectele vizuale la sursa de alimentare.
-#   AC        -> normal  (blur + umbre + animații)
-#   baterie   -> battery (fără blur/umbre; animațiile rămân, sunt ieftine)
-#   eco       -> eco     (fără blur/umbre/animații + luminozitate redusă; SUPER+F10)
-# hyprland.lua citește starea din $XDG_RUNTIME_DIR/hypr-power-mode la fiecare încărcare,
-# deci schimbarea = scriem starea + `hyprctl reload`.
-#   power-watch          rulează în fundal (pornit de Hyprland)
-#   power-watch --once   aplică o singură dată (folosit de eco-mode)
+# Adapt visual effects to the power source. hyprland.lua reads the mode from
+# $XDG_RUNTIME_DIR/hypr-power-mode on every reload.
+#   AC -> normal | battery -> no blur/shadows | eco (SUPER+F10) -> also no animations
+#   power-watch          run in the background (started by Hyprland)
+#   power-watch --once   apply once
 rt=${XDG_RUNTIME_DIR:-/tmp}
 state="$rt/hypr-power-mode"
 eco="$rt/hypr-eco"
@@ -26,6 +23,7 @@ apply() {
     if [[ $new != "$old" ]]; then
         echo "$new" > "$state"
         hyprctl reload >/dev/null 2>&1
+        "$HOME/.local/bin/rain" auto &
     fi
 }
 

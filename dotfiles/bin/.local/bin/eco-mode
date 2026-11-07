@@ -1,17 +1,16 @@
 #!/usr/bin/env bash
-# eco-mode — toggle (SUPER+F10): oprește blur/umbre/animații și scade luminozitatea.
-# Pentru autonomie maximă când ești departe de priză.
+# Toggle (SUPER+F10): no blur/shadows/animations, 30% brightness.
 rt=${XDG_RUNTIME_DIR:-/tmp}
 eco="$rt/hypr-eco"
 
 if [[ -e $eco ]]; then
     rm -f "$eco"
     brightnessctl -r >/dev/null 2>&1
-    msg="OFF — efecte restaurate"
+    msg="OFF"
 else
     : > "$eco"
     brightnessctl -s set 30% >/dev/null 2>&1
-    msg="ON — fără efecte, luminozitate 30%"
+    msg="ON (no effects, 30% brightness)"
 fi
 
 "$HOME/.local/bin/power-watch" --once

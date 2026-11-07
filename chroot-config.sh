@@ -1,88 +1,97 @@
 #!/usr/bin/env bash
-# chroot-config.sh — PASUL 2, rulează AUTOMAT în chroot (apelat de install-base.sh).
-# Face: pacman, timp/locale, utilizator, pachete, mkinitcpio, GRUB + temă,
-#       Plymouth + temă, greetd, configurări de sistem (baterie etc.), servicii, dotfiles.
+# Step 2 — runs inside the chroot (called by install-base.sh).
 set -Eeuo pipefail
 
-REPO=/root/arch-hyprland-x270
+export LC_ALL=C.UTF-8
+REPO=/root/arch-hyprland-installer
+STEP_TOTAL=9
+LOG_FILE=/var/log/arch-hyprland-install.log
+FAILED_LOG=/var/log/arch-hyprland-failed-packages.log
+: > "$LOG_FILE"
+: > "$FAILED_LOG"
 # shellcheck source=lib/common.sh
 source "$REPO/lib/common.sh"
 # shellcheck source=/dev/null
-source /root/install.conf   # HOSTNAME USERNAME TIMEZONE LUKS LUKS_UUID
-trap 'die "Eroare la linia $LINENO: $BASH_COMMAND"' ERR
+source /root/install.conf   # HOSTNAME USERNAME TIMEZONE LUKS LUKS_UUID AUTOLOGIN
+trap 'die "Error at line $LINENO: $BASH_COMMAND"' ERR
 
-FAILED_LOG=/var/log/arch-hyprland-failed-packages.log
-: > "$FAILED_LOG"
-
-# ------------------------------------------------------------------ pacman
-titlu "pacman"
-sed -i -e 's/^#Color/Color/' -e 's/^#ParallelDownloads.*/ParallelDownloads = 10/' /etc/pacman.conf
-grep -q '^ILoveCandy' /etc/pacman.conf || sed -i '/^Color/a ILoveCandy' /etc/pacman.conf
-
-# ------------------------------------------------------------------ timp, locale, host
-titlu "Timp, locale, hostname"
-ln -sf "/usr/share/zoneinfo/$TIMEZONE" /etc/localtime
-hwclock --systohc
-sed -i -e 's/^#\(en_US.UTF-8 UTF-8\)/\1/' -e 's/^#\(ro_RO.UTF-8 UTF-8\)/\1/' /etc/locale.gen
-locale-gen
-echo 'LANG=en_US.UTF-8' > /etc/locale.conf
-printf 'KEYMAP=us\nFONT=ter-v16n\n' > /etc/vconsole.conf
-echo "$HOSTNAME" > /etc/hostname
-cat > /etc/hosts <<EOF
+# ---------------------------------------------------------------- 1
+step "Base configuration"
+base_config() {
+    sed -i -e 's/^#Color/Color/' -e 's/^#ParallelDownloads.*/ParallelDownloads = 10/' /etc/pacman.conf
+    grep -q '^ILoveCandy' /etc/pacman.conf || sed -i '/^Color/a ILoveCandy' /etc/pacman.conf
+    ln -sf "/usr/share/zoneinfo/$TIMEZONE" /etc/localtime
+    hwclock --systohc
+    sed -i -e 's/^#\(en_US.UTF-8 UTF-8\)/\1/' -e 's/^#\(ro_RO.UTF-8 UTF-8\)/\1/' /etc/locale.gen
+    locale-gen
+    echo 'LANG=en_US.UTF-8' > /etc/locale.conf
+    printf 'KEYMAP=us\nFONT=ter-v16n\n' > /etc/vconsole.conf
+    echo "$HOSTNAME" > /etc/hostname
+    cat > /etc/hosts <<HOSTS
 127.0.0.1  localhost
 ::1        localhost
 127.0.1.1  $HOSTNAME.localdomain $HOSTNAME
-EOF
+HOSTS
+}
+run_cmd "Pacman, time, locale, hostname" base_config
 
-# ------------------------------------------------------------------ utilizator
-titlu "Utilizator"
+# ---------------------------------------------------------------- 2
+step "User"
 id "$USERNAME" &>/dev/null || useradd -m -G wheel,video,input,audio -s /bin/zsh "$USERNAME"
 echo '%wheel ALL=(ALL:ALL) ALL' > /etc/sudoers.d/10-wheel
 chmod 440 /etc/sudoers.d/10-wheel
-info "Parola pentru root:"
-until passwd root; do warn "Încearcă din nou."; done
-info "Parola pentru $USERNAME:"
-until passwd "$USERNAME"; do warn "Încearcă din nou."; done
+info "Password for root:"
+until passwd root; do warn "Try again."; done
+info "Password for $USERNAME (used to log in):"
+until passwd "$USERNAME"; do warn "Try again."; done
 
-# ------------------------------------------------------------------ pachete
-titlu "Pachete (poate dura; depinde de internet)"
-for lista in 10-system 20-desktop 30-dev 40-network 50-security; do
-    instaleaza_lista "$REPO/packages/$lista.txt"
+# ---------------------------------------------------------------- 3
+step "Packages"
+for list in 10-system 20-desktop 30-dev 40-network 50-security; do
+    install_list "$REPO/packages/$list.txt"
 done
-
 for g in wireshark docker libvirt kvm uucp lp; do
     getent group "$g" >/dev/null && usermod -aG "$g" "$USERNAME"
 done
 
-# ------------------------------------------------------------------ configurări de sistem
-titlu "Configurări de sistem (baterie, zram, sysctl, logind, greetd)"
-cp -r "$REPO/system/etc/." /etc/
-sed -i 's/^ENABLED=.*/ENABLED=yes/' /etc/ufw/ufw.conf 2>/dev/null || true
+# ---------------------------------------------------------------- 4
+step "System configuration"
+system_config() {
+    cp -r "$REPO/system/etc/." /etc/
+    sed -i 's/^ENABLED=.*/ENABLED=yes/' /etc/ufw/ufw.conf 2>/dev/null || true
+    if [[ ${AUTOLOGIN:-no} == yes ]]; then
+        cat >> /etc/greetd/config.toml <<GREETD
 
-# ------------------------------------------------------------------ mkinitcpio
-titlu "mkinitcpio"
+[initial_session]
+command = "start-hyprland"
+user = "$USERNAME"
+GREETD
+    fi
+}
+run_cmd "Power, zram, sysctl, logind, greetd" system_config
+
+# ---------------------------------------------------------------- 5
+step "Initramfs and Plymouth"
 if [[ $LUKS == yes ]]; then
     HOOKS="base udev plymouth autodetect modconf kms keyboard keymap consolefont block encrypt filesystems fsck"
 else
     HOOKS="base udev plymouth autodetect modconf kms keyboard keymap consolefont block filesystems fsck"
 fi
-mkdir -p /etc/mkinitcpio.conf.d
-cat > /etc/mkinitcpio.conf.d/10-arch-hyprland.conf <<EOF
+initramfs_config() {
+    mkdir -p /etc/mkinitcpio.conf.d /usr/share/plymouth/themes
+    cat > /etc/mkinitcpio.conf.d/10-arch-hyprland.conf <<MKINIT
 MODULES=(i915)
 HOOKS=($HOOKS)
-EOF
+MKINIT
+    cp -r "$REPO/system/plymouth/hackerlinux" /usr/share/plymouth/themes/
+    plymouth-set-default-theme hackerlinux
+}
+run_cmd "Plymouth theme and hooks" initramfs_config
+run_cmd "Building initramfs" mkinitcpio -P
 
-# ------------------------------------------------------------------ Plymouth
-titlu "Plymouth"
-mkdir -p /usr/share/plymouth/themes
-cp -r "$REPO/system/plymouth/hackerlinux" /usr/share/plymouth/themes/
-plymouth-set-default-theme hackerlinux
-
-mkinitcpio -P
-
-# ------------------------------------------------------------------ GRUB
-titlu "GRUB"
-set_grub() {   # set_grub CHEIE VALOARE  (înlocuiește sau adaugă în /etc/default/grub)
+# ---------------------------------------------------------------- 6
+step "GRUB"
+set_grub() {
     local k=$1 v=$2
     if grep -q "^#\?${k}=" /etc/default/grub; then
         sed -i "s|^#\?${k}=.*|${k}=${v}|" /etc/default/grub
@@ -90,53 +99,60 @@ set_grub() {   # set_grub CHEIE VALOARE  (înlocuiește sau adaugă în /etc/def
         echo "${k}=${v}" >> /etc/default/grub
     fi
 }
+grub_config() {
+    local cmdline="quiet splash loglevel=3 rd.udev.log_level=3 vt.global_cursor_default=0 nowatchdog mem_sleep_default=deep"
+    set_grub GRUB_CMDLINE_LINUX_DEFAULT "\"$cmdline\""
+    [[ $LUKS == yes ]] && set_grub GRUB_CMDLINE_LINUX "\"cryptdevice=UUID=${LUKS_UUID}:cryptroot\""
+    # hidden menu, 1s timeout; hold SHIFT at boot to show it
+    set_grub GRUB_TIMEOUT 1
+    set_grub GRUB_TIMEOUT_STYLE hidden
+    set_grub GRUB_GFXMODE auto
+    set_grub GRUB_GFXPAYLOAD_LINUX keep
+    set_grub GRUB_TERMINAL_OUTPUT gfxterm
+    set_grub GRUB_THEME '"/boot/grub/themes/hackerlinux/theme.txt"'
 
-CMDLINE="quiet splash loglevel=3 rd.udev.log_level=3 vt.global_cursor_default=0 nowatchdog mem_sleep_default=deep"
-set_grub GRUB_CMDLINE_LINUX_DEFAULT "\"$CMDLINE\""
-if [[ $LUKS == yes ]]; then
-    set_grub GRUB_CMDLINE_LINUX "\"cryptdevice=UUID=${LUKS_UUID}:cryptroot\""
-fi
-set_grub GRUB_TIMEOUT 3
-set_grub GRUB_GFXMODE auto
-set_grub GRUB_GFXPAYLOAD_LINUX keep
-set_grub GRUB_TERMINAL_OUTPUT gfxterm
-set_grub GRUB_THEME '"/boot/grub/themes/hackerlinux/theme.txt"'
+    local theme_dir=/boot/grub/themes/hackerlinux font=/usr/share/fonts/TTF/DejaVuSansMono.ttf
+    mkdir -p "$theme_dir"
+    cp -r "$REPO/system/grub-theme/." "$theme_dir/"
+    [[ -f $font ]] || font=$(find /usr/share/fonts -name 'DejaVuSansMono.ttf' | head -1)
+    grub-mkfont -s 22 -o "$theme_dir/dejavu-mono-22.pf2" "$font"
+    grub-mkfont -s 16 -o "$theme_dir/dejavu-mono-16.pf2" "$font"
 
-THEME_DIR=/boot/grub/themes/hackerlinux
-mkdir -p "$THEME_DIR"
-cp -r "$REPO/system/grub-theme/." "$THEME_DIR/"
-FONT_TTF=/usr/share/fonts/TTF/DejaVuSansMono.ttf
-[[ -f $FONT_TTF ]] || FONT_TTF=$(find /usr/share/fonts -name 'DejaVuSansMono.ttf' | head -1)
-grub-mkfont -s 22 -o "$THEME_DIR/dejavu-mono-22.pf2" "$FONT_TTF"
-grub-mkfont -s 16 -o "$THEME_DIR/dejavu-mono-16.pf2" "$FONT_TTF"
+    grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=Arch --recheck
+    # fallback path for firmware that drops NVRAM entries (VirtualBox)
+    grub-install --target=x86_64-efi --efi-directory=/boot --removable --recheck
+    grub-mkconfig -o /boot/grub/grub.cfg
+}
+run_cmd "Installing GRUB" grub_config
 
-grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=Arch --recheck
-# copie de rezervă pe calea standard (VirtualBox și unele BIOS-uri nu țin intrarea NVRAM)
-grub-install --target=x86_64-efi --efi-directory=/boot --removable --recheck
-grub-mkconfig -o /boot/grub/grub.cfg
+# ---------------------------------------------------------------- 7
+step "Services"
+enable_services() {
+    systemctl enable NetworkManager greetd tlp thermald bluetooth \
+        fstrim.timer systemd-timesyncd ufw reflector.timer paccache.timer docker.socket
+    systemctl mask systemd-rfkill.service systemd-rfkill.socket   # TLP handles rfkill
+    systemctl mask NetworkManager-wait-online.service              # faster boot
+    systemctl --global enable pipewire.socket pipewire-pulse.socket wireplumber.service
+}
+run_cmd "Enabling services" enable_services
 
-# ------------------------------------------------------------------ servicii
-titlu "Servicii"
-systemctl enable NetworkManager greetd tlp thermald bluetooth \
-    fstrim.timer systemd-timesyncd ufw reflector.timer paccache.timer docker.socket
-# TLP recomandă să nu existe aceste unități (gestionează el rfkill)
-systemctl mask systemd-rfkill.service systemd-rfkill.socket
-# fără așteptare inutilă la boot
-systemctl mask NetworkManager-wait-online.service
-# audio per-utilizator, pornit la cerere
-systemctl --global enable pipewire.socket pipewire-pulse.socket wireplumber.service
-
-# ------------------------------------------------------------------ dotfiles + repo în home
-titlu "Dotfiles pentru $USERNAME"
+# ---------------------------------------------------------------- 8
+step "Dotfiles"
 UHOME=/home/$USERNAME
-rm -rf "$UHOME/arch-hyprland-x270"
-cp -a "$REPO" "$UHOME/arch-hyprland-x270"
-chown -R "$USERNAME:$USERNAME" "$UHOME/arch-hyprland-x270"
-runuser -l "$USERNAME" -c 'cd "$HOME/arch-hyprland-x270" && bash scripts/stow-all.sh'
+install_dotfiles() {
+    rm -rf "$UHOME/arch-hyprland-installer"
+    cp -a "$REPO" "$UHOME/arch-hyprland-installer"
+    chown -R "$USERNAME:$USERNAME" "$UHOME/arch-hyprland-installer"
+    runuser -l "$USERNAME" -c 'cd "$HOME/arch-hyprland-installer" && bash scripts/stow-all.sh'
+}
+run_cmd "Linking dotfiles with GNU Stow" install_dotfiles
 
+# ---------------------------------------------------------------- 9
+step "Summary"
 if [[ -s $FAILED_LOG ]]; then
-    warn "Pachete care nu au putut fi instalate (vezi $FAILED_LOG):"
+    warn "Packages that failed (see $FAILED_LOG):"
     sed 's/^/    - /' "$FAILED_LOG" >&2
+else
+    ok "All packages installed"
 fi
-
-ok "chroot-config terminat."
+ok "System configured"
