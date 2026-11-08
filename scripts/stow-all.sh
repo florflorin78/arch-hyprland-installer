@@ -4,7 +4,7 @@ set -Eeuo pipefail
 
 cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/../dotfiles"
 
-PACKAGES=(hypr waybar kitty wofi mako zsh starship nvim tmux gtk fastfetch bin wallpapers)
+PACKAGES=(hypr waybar kitty wofi mako zsh starship nvim tmux gtk fastfetch bin wallpapers guide apps code)
 
 chmod +x bin/.local/bin/*
 mkdir -p "$HOME/.config" "$HOME/.local/bin" "$HOME/.local/state/arch-hyprland" "$HOME/Pictures/wallpapers"

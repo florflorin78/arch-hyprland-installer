@@ -47,7 +47,7 @@ until passwd "$USERNAME"; do warn "Try again."; done
 
 # ---------------------------------------------------------------- 3
 step "Packages"
-for list in 10-system 20-desktop 30-dev 40-network 50-security; do
+for list in 10-system 20-desktop 30-dev 35-ai 40-network 50-security; do
     install_list "$REPO/packages/$list.txt"
 done
 for g in wireshark docker libvirt kvm uucp lp; do
@@ -100,7 +100,8 @@ set_grub() {
     fi
 }
 grub_config() {
-    local cmdline="quiet splash loglevel=3 rd.udev.log_level=3 vt.global_cursor_default=0 nowatchdog mem_sleep_default=deep"
+    # silent boot: no kernel/systemd/udev text between the splash and the desktop
+    local cmdline="quiet splash loglevel=3 rd.udev.log_level=3 udev.log_level=3 systemd.show_status=false rd.systemd.show_status=false vt.global_cursor_default=0 nowatchdog mem_sleep_default=deep"
     set_grub GRUB_CMDLINE_LINUX_DEFAULT "\"$cmdline\""
     [[ $LUKS == yes ]] && set_grub GRUB_CMDLINE_LINUX "\"cryptdevice=UUID=${LUKS_UUID}:cryptroot\""
     # hidden menu, 1s timeout; hold SHIFT at boot to show it
@@ -129,7 +130,7 @@ run_cmd "Installing GRUB" grub_config
 step "Services"
 enable_services() {
     systemctl enable NetworkManager greetd tlp thermald bluetooth \
-        fstrim.timer systemd-timesyncd ufw reflector.timer paccache.timer docker.socket
+        fstrim.timer systemd-timesyncd ufw reflector.timer paccache.timer docker.socket libvirtd.socket
     systemctl mask systemd-rfkill.service systemd-rfkill.socket   # TLP handles rfkill
     systemctl mask NetworkManager-wait-online.service              # faster boot
     systemctl --global enable pipewire.socket pipewire-pulse.socket wireplumber.service

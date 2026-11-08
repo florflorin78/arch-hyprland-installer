@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# Terminal intro: the ASCII portrait "decodes" out of glitch noise, then fastfetch.
+logo="$HOME/.config/fastfetch/logo.txt"
+[[ -r $logo && -t 1 ]] || exec fastfetch
+
+declare -A col=([1]=$'\e[33m' [2]=$'\e[36m' [3]=$'\e[34m')
+noise='01<>/\#%*+=-[]|ABCDEF'
+mapfile -t lines < "$logo"
+frames=9
+
+printf '\e[?25l\e[H\e[2J'
+for ((f = 1; f <= frames; f++)); do
+    out=""
+    for line in "${lines[@]}"; do
+        c=${col[1]}
+        for ((i = 0; i < ${#line}; i++)); do
+            ch=${line:i:1}
+            if [[ $ch == '$' && ${line:i+1:1} == [123] ]]; then
+                c=${col[${line:i+1:1}]}; ((i++)); continue
+            fi
+            if [[ $ch != ' ' ]] && ((RANDOM % frames >= f)); then
+                ((RANDOM % 4)) && out+="$c" || out+=$'\e[35m'
+                out+="${noise:RANDOM % ${#noise}:1}"
+            else
+                out+="$c$ch"
+            fi
+        done
+        out+=$'\e[0m\n'
+    done
+    # occasional horizontal tear
+    ((f < frames - 1)) && out=${out//$'\n' /$'\n'  }
+    printf '\e[H%s' "$out"
+    sleep 0.045
+done
+printf '\e[H\e[2J\e[?25h'
+exec fastfetch

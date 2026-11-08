@@ -38,19 +38,19 @@ choose_disk() {
     done < <(lsblk -dpno NAME,TYPE | awk '$2=="disk"{print $1}')
     ((${#disks[@]} > 0)) || die "No disk found."
 
-    printf '\n %s%-3s %-14s %-9s %-22s %-6s %s%s\n' "$C_GRN" "#" "Disk" "Size" "Model" "Bus" "Contains" "$C_RESET"
+    printf '\n %s%-3s %-14s %-9s %-22s %-6s %s%s\n' "$C_BASE" "#" "Disk" "Size" "Model" "Bus" "Contains" "$C_RESET"
     for d in "${disks[@]}"; do
         size=$(lsblk -dno SIZE "$d" | xargs)
         model=$(lsblk -dno MODEL "$d" | xargs)
         tran=$(lsblk -dno TRAN "$d" | xargs)
         fs=$(lsblk -lno FSTYPE "$d" | sed '/^$/d' | sort -u | tr '\n' ' ')
         printf ' %s%-3s%s %-14s %-9s %-22.22s %-6s %s%s%s\n' \
-            "$C_BRT" "$i" "$C_RESET" "$d" "$size" "${model:--}" "${tran:--}" "$C_GRN" "${fs:-empty}" "$C_RESET"
+            "$C_HI" "$i" "$C_RESET" "$d" "$size" "${model:--}" "${tran:--}" "$C_BASE" "${fs:-empty}" "$C_RESET"
         i=$((i + 1))
     done
     echo
 
-    read -r -p " ${C_BRT}?${C_RESET} Install on disk number: " n
+    read -r -p " ${C_HI}?${C_RESET} Install on disk number: " n
     [[ $n =~ ^[0-9]+$ ]] && ((n >= 1 && n <= ${#disks[@]})) || die "Invalid choice."
     DISK=${disks[n-1]}
     DISK_INFO="$(lsblk -dno SIZE "$DISK" | xargs) $(lsblk -dno MODEL "$DISK" | xargs)"
@@ -89,7 +89,7 @@ box "Summary" \
     "Timezone:   $TIMEZONE"
 echo
 warn "ALL data on $DISK will be ERASED."
-read -r -p " ${C_BRT}?${C_RESET} Type the disk path ($DISK) to confirm: " conf
+read -r -p " ${C_HI}?${C_RESET} Type the disk path ($DISK) to confirm: " conf
 [[ $conf == "$DISK" ]] || die "Mismatch, aborting. Nothing was changed."
 
 # ---------------------------------------------------------------- 4

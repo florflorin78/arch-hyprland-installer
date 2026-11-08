@@ -60,11 +60,11 @@ alias calc='qalc'
 # ---- intro (once per login, in kitty) ----
 if [[ $TERM == xterm-kitty && -n ${XDG_RUNTIME_DIR:-} && ! -e $XDG_RUNTIME_DIR/intro-shown ]] && command -v fastfetch >/dev/null; then
     : > "$XDG_RUNTIME_DIR/intro-shown"
-    fastfetch
+    "$HOME/.local/bin/intro"
 fi
 
 # ---- tools ----
-export FZF_DEFAULT_OPTS='--height 40% --layout=reverse --border --color=bg+:#06140b,hl:#39ff7a,hl+:#39ff7a,pointer:#22d36b,prompt:#22d36b,info:#5f8f6e'
+export FZF_DEFAULT_OPTS='--height 40% --layout=reverse --border --color=bg+:#121621,hl:#e5c95a,hl+:#e5c95a,pointer:#4fb8c4,prompt:#4fb8c4,info:#6b7385'
 command -v zoxide   >/dev/null && eval "$(zoxide init zsh --cmd cd)"
 command -v direnv   >/dev/null && eval "$(direnv hook zsh)"
 command -v starship >/dev/null && eval "$(starship init zsh)"

@@ -6,8 +6,6 @@ hydra
 sqlmap
 nikto
 gobuster
-ffuf
-wfuzz
 bettercap
 ettercap
 masscan
@@ -23,7 +21,6 @@ binwalk
 yara
 sleuthkit
 metasploit
-python-impacket
 python-scapy
 python-paramiko
 openssl

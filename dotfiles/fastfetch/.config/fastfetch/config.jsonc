@@ -2,12 +2,12 @@
     "logo": {
         "type": "file",
         "source": "~/.config/fastfetch/logo.txt",
-        "color": { "1": "light_green" },
+        "color": { "1": "yellow", "2": "cyan", "3": "blue" },
         "padding": { "right": 3 }
     },
     "display": {
         "separator": "  ",
-        "color": { "keys": "green", "output": "light_green", "title": "light_green" }
+        "color": { "keys": "yellow", "output": "cyan", "title": "yellow" }
     },
     "modules": [
         "title",

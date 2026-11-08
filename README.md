@@ -15,6 +15,13 @@ The first login in Hyprland opens a terminal that finishes setup (AUR incl. Zen,
 
 Test in VirtualBox first: Settings → System → Enable EFI, 4 GB RAM, 30 GB disk.
 
+## Update an installed system (no reinstall)
+
+```bash
+cd ~/arch-hyprland-installer && git pull && scripts/sync.sh
+```
+Pulls the repo, re-links dotfiles, installs new packages, refreshes /etc configs and the boot theme.
+
 ## Layout
 
 | Path | Role |
@@ -23,59 +30,47 @@ Test in VirtualBox first: Settings → System → Enable EFI, 4 GB RAM, 30 GB di
 | `install-base.sh` | live ISO: disk, partitions, LUKS, pacstrap, fstab |
 | `chroot-config.sh` | chroot: packages, GRUB, Plymouth, greetd, services, dotfiles |
 | `post-install.sh` | first login: yay, AUR, Claude Code, neovim, git, SSH |
-| `packages/*.txt` | package lists, one name per line |
+| `packages/*.txt` | package lists by purpose: system, desktop, dev, ai, network, security, aur |
 | `dotfiles/` | GNU Stow packages → `~` (`scripts/stow-all.sh` re-applies) |
 | `system/etc/` | copied to `/etc` (TLP, sysctl, zram, logind, greetd) |
 | `assets/generate_wallpaper.py` | regenerates wallpaper, GRUB background, Plymouth logo |
 
-## Shortcuts (SUPER = Windows key). Full searchable list: SUPER + F1
+## Shortcuts, apps and guides
 
-| Key | Action |
-|---|---|
-| `SUPER+Enter` | terminal (kitty) |
-| `SUPER+D` / `SUPER+SHIFT+D` | app launcher / run command |
-| `SUPER+B` / `SUPER+SHIFT+B` / `SUPER+CTRL+B` | Zen / qutebrowser / Firefox |
-| `SUPER+X` / `SUPER+SHIFT+X` | Claude Code / claude.ai |
-| `SUPER+E` / `SUPER+C` | yazi / VS Code |
-| `SUPER+N` / `A` / `Y` | network / audio / bluetooth TUIs |
-| `SUPER+V` | clipboard history |
-| `SUPER+M` | mouse from keyboard (wl-kbptr) |
-| `SUPER+Q` | close window |
-| `SUPER+F` / `SUPER+Space` | fullscreen / floating |
-| `SUPER+h j k l` (or arrows) | focus |
-| `SUPER+SHIFT+h j k l` | move window |
-| `SUPER+CTRL+h j k l` | resize (hold) |
-| `SUPER+1..0` / `SUPER+SHIFT+1..0` | workspace / move window |
-| `SUPER+Tab`, `SUPER+[` `]` | next / previous workspace |
-| `ALT+Tab` | next window |
-| `SUPER+S` / `SUPER+SHIFT+S` | scratchpad / send to scratchpad |
-| `Print` / `SUPER+Print` | screenshot full / region |
-| `SUPER+SHIFT+Print` | screenshot + annotate (satty) |
-| `SUPER+CTRL+Print` | screen recording on/off |
-| `SUPER+ALT+Print` | OCR a region to the clipboard |
-| `SUPER+W` / `SUPER+SHIFT+W` | next wallpaper / live matrix rain on-off |
-| `SUPER+=` | calculator (qalc) |
-| `SUPER+CTRL+D` | do not disturb |
-| `SUPER+CTRL+Enter` | floating terminal |
-| `SUPER+Esc` | lock |
-| `SUPER+SHIFT+E` (or Power button) | power menu |
-| `SUPER+F10` | eco mode |
-| `SUPER+CTRL+N` / `P` | night light / color picker |
-| `SUPER+CTRL+M` / `R` | dismiss / restore notifications |
-| `Alt+Shift` | switch layout us ↔ ro |
-| `SUPER+SHIFT+R` | reload Hyprland config |
-| Fn keys | volume, mic, brightness (with OSD) |
+On the laptop: **SUPER + H** = all shortcuts (searchable), **SUPER + A** = apps by category with a
+one-line description, **SUPER + F1** = help center (shortcuts, apps guide, Linux basics, system map).
+Windows move with the **arrow keys**: SUPER+arrows focus, SUPER+SHIFT+arrows move, SUPER+CTRL+arrows resize.
 
-kitty: `Ctrl+Shift+T` new tab, `Ctrl+Shift+←/→` switch tabs, `Alt+1..5` jump to tab,
-`Ctrl+Shift+\` / `Ctrl+Shift+-` splits, `Ctrl+Alt+h j k l` move between splits. tmux prefix: `Ctrl+a`.
+The same guides are in [`docs/`](docs): [KEYBINDS](docs/KEYBINDS.md) · [APPS](docs/APPS.md) ·
+[LINUX-BASICS](docs/LINUX-BASICS.md) · [SYSTEM](docs/SYSTEM.md).
+The app list comes from `dotfiles/guide/.local/share/arch-hyprland/apps.tsv`
+(category, name, kind, command, description, examples), so adding an app there adds it to the menu.
 
 ## Look
 
-Matrix-terminal style everywhere: installer (logo, system panel, `[ OK ]` log lines, progress bar),
-boot (Plymouth: falling glyphs, boot log, LUKS prompt), login (tuigreet), desktop (green palette),
-prompt (`user@host:~/path$`) and a fastfetch intro once per login. A live matrix-rain wallpaper
-(kitty panel + cmatrix) runs on AC power only and stops on battery or eco mode.
-`python3 assets/generate_wallpaper.py` regenerates wallpapers, GRUB background and Plymouth images.
+Subdued cyberpunk / retro-futurist: dark navy, warm yellow accent, teal secondary, soft magenta only
+for errors; scanlines, HUD corners, a perspective grid. Your portrait (`assets/avatar.jpg`) is
+digitized into characters only (density-sorted glyphs, teal -> yellow), cropped and centred on the
+face, and used in: the lock screen, the boot splash (with a HUD ring), fastfetch (coloured ASCII)
+and the installer banner (plain ASCII). Wallpapers: night-city skyline (default), grid, clean.
+Replace `assets/avatar.jpg` and run `python3 assets/generate_wallpaper.py` to regenerate everything.
+
+`SUPER+SHIFT+W` turns on a live data-rain wallpaper (kitty panel + cmatrix). It is off by default
+because it redraws the whole screen; it only runs on AC power.
+
+### Boot without the Lenovo logo
+
+The Lenovo logo comes from the firmware; Linux cannot hide it. What helps:
+- BIOS (F1): Config → Network → disable UEFI IPv4 / IPv6 Network Stack (no PXE attempt);
+  Startup → Boot → put the SSD first. This makes the logo flash by quickly.
+- To replace it with your own: Lenovo's X270 BIOS update package can flash a custom startup logo
+  (`assets/bios-logo.gif`, renamed as its README asks). Check the size/format limits in that
+  README first; flashing firmware is at your own risk.
+
+After the disk password the splash stays on screen until Hyprland draws (no console text):
+`plymouth quit --retain-splash`, `systemd.show_status=false`, Hyprland background = theme navy.
+Every few seconds the splash glitches (logo jitter, magenta ghost, bars); the first terminal after
+login plays a short "decode" of the ASCII portrait (`~/.local/bin/intro`) before fastfetch.
 
 ## Bar
 
@@ -101,6 +96,8 @@ no blur/shadows on battery. `SUPER+F10` also disables animations and drops brigh
 ## Troubleshooting
 
 - Hyprland config errors: `hyprctl configerrors` (config is Lua, Hyprland ≥ 0.55).
+- Not in the official repos (installed from AUR at first login): ffuf, wfuzz, python-impacket. FRR: `yay -S frr` (long compile).
+- BIOS: disable Config → Network → UEFI IPv4/IPv6 Network Stack to skip the PXE attempt at boot.
 - Failed packages: `/var/log/arch-hyprland-failed-packages.log`, `~/arch-hyprland-failed-aur.log`.
 - Re-apply dotfiles: `~/arch-hyprland-installer/scripts/stow-all.sh`.
 - Claude Desktop only exists for Debian/Ubuntu; on Arch use Claude Code (`claude`).

@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# Apps grouped by category, each with a one-line description (SUPER+A).
+# gui = window, tui = terminal app, cli = opens a terminal with short examples (tldr).
+catalog="$HOME/.local/share/arch-hyprland/apps.tsv"
+[[ -r $catalog ]] || { notify-send "apps-menu" "catalog missing: $catalog"; exit 1; }
+
+menu() { wofi --dmenu --prompt "$1" --width 900 --height 620 --cache-file /dev/null; }
+
+cat=$(cut -f1 "$catalog" | awk '!seen[$0]++' | menu "Category") || exit 0
+[[ -n $cat ]] || exit 0
+
+pick=$(awk -F'\t' -v c="$cat" '$1 == c { printf "%-28s │ %s\n", $2, $5 }' "$catalog" | menu "$cat") || exit 0
+name=$(sed 's/ *│.*//' <<<"$pick")
+IFS=$'\t' read -r _ _ kind cmd _ examples < <(awk -F'\t' -v c="$cat" -v n="$name" '$1 == c && $2 == n' "$catalog")
+[[ -n ${cmd:-} ]] || exit 0
+
+case $kind in
+    gui) [[ $cmd == browser* ]] && cmd="$HOME/.local/bin/$cmd"
+         [[ -x $HOME/.local/bin/${cmd%% *} ]] && cmd="$HOME/.local/bin/$cmd"
+         setsid -f sh -c "$cmd" >/dev/null 2>&1 ;;
+    tui) [[ -x $HOME/.local/bin/${cmd%% *} ]] && cmd="$HOME/.local/bin/$cmd"
+         setsid -f kitty --title "$name" sh -c "$cmd" >/dev/null 2>&1 ;;
+    cli) tool=${cmd#sudo }; tool=${tool%% *}
+         ex=$(tr ';' '\n' <<<"$examples" | sed 's/^/  $ /')
+         setsid -f kitty --title "$name" zsh -c "printf '\e[1;33m%s\e[0m\n%s\n\n' \"$name: $tool\" \"\$1\"; tldr $tool 2>/dev/null | head -40; exec zsh" _ "$ex" >/dev/null 2>&1 ;;
+esac

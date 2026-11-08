@@ -1,0 +1,12 @@
+# AI, data science, neural networks
+jupyterlab
+python-ipykernel
+python-numpy
+python-pandas
+python-matplotlib
+python-scipy
+python-scikit-learn
+python-seaborn
+python-pytorch
+python-torchvision
+ollama

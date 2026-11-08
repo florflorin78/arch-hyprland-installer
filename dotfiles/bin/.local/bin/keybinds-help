@@ -1,13 +1,51 @@
 #!/usr/bin/env bash
-# Show all shortcuts, generated live from Hyprland (anything bound with a description).
-hyprctl binds -j | jq -r '
-    def mods: . as $m | [
-        (select(($m/64|floor)%2==1) | "SUPER"),
-        (select(($m/4|floor)%2==1)  | "CTRL"),
-        (select(($m/8|floor)%2==1)  | "ALT"),
-        (select(($m/1|floor)%2==1)  | "SHIFT")
-    ];
-    [ .[] | select((.description // "") != "")
-          | ([(.modmask | mods[]), .key] | join(" + ")) + "\t" + .description ]
-    | sort | .[]
-' | column -t -s $'\t' | wofi --dmenu --prompt "Shortcuts" --width 820 --height 640 >/dev/null
+# All keyboard shortcuts, read from hyprland.lua (so the list is always up to date).
+#   keybinds-help           searchable window (wofi)
+#   keybinds-help --print   plain text
+conf="$HOME/.config/hypr/hyprland.lua"
+
+list() {
+    awk '
+    function row(k, d) {
+        if (pending != "") { print ""; print pending; pending = "" }
+        printf "  %-26s %s\n", k, d
+    }
+    function nice(k) {
+        gsub(/Return/, "Enter", k); gsub(/Escape/, "Esc", k); gsub(/equal/, "=", k)
+        gsub(/bracketright/, "]", k); gsub(/bracketleft/, "[", k)
+        if (k ~ /^XF86/) k = "Fn key (" substr(k, 5) ")"
+        return k
+    }
+    /^-+ KEYBINDS/ { on = 1; next }
+    !on { next }
+    /^-- / {
+        sec = substr($0, 4); sub(/ \(.*$/, "", sec); sub(/ [0-9]+\.\.[0-9]+$/, "", sec)
+        pending = "## " sec
+        if (sec ~ /^Focus/) {
+            pending = "## Windows: arrow keys"
+            row("SUPER + arrows", "Focus window left/right/up/down")
+            row("SUPER + SHIFT + arrows", "Move window")
+            row("SUPER + CTRL + arrows", "Resize window (hold to repeat)")
+            row("ALT + Tab", "Next window")
+        }
+        if (sec ~ /^Workspaces/) {
+            row("SUPER + 1..0", "Go to workspace 1..10")
+            row("SUPER + SHIFT + 1..0", "Move window to workspace 1..10")
+        }
+        next
+    }
+    /^bind\(/ {
+        key = ""
+        if (match($0, /^bind\(mod \.\. " \+ [^"]+"/)) key = "SUPER + " substr($0, RSTART + 16, RLENGTH - 17)
+        else if (match($0, /^bind\("[^"]+"/))        key = substr($0, RSTART + 6, RLENGTH - 7)
+        n = split($0, q, "\"")
+        desc = (n >= 3) ? q[n - 1] : ""
+        if (key != "" && desc != "") row(nice(key), desc)
+    }' "$conf"
+}
+
+if [[ ${1:-} == --print ]]; then
+    list
+else
+    list | wofi --dmenu --prompt "Search shortcuts" --width 900 --height 680 --cache-file /dev/null >/dev/null
+fi

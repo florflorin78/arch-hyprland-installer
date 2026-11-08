@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Claude Code
+Comment=AI coding assistant in the terminal
+Exec=kitty --title "Claude Code" claude
+Icon=utilities-terminal
+Categories=Development;

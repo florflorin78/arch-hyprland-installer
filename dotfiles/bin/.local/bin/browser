@@ -1,6 +1,42 @@
 #!/usr/bin/env bash
-# Open the preferred browser: Zen, then Firefox, then Qutebrowser.
-for b in zen-browser zen zen-browser-bin firefox qutebrowser; do
-    command -v "$b" >/dev/null 2>&1 && exec "$b" "$@"
-done
-notify-send "browser" "No browser found (Zen installs at first login)."
+# Open Zen Browser (SUPER+B). If Zen is missing, offer to install it instead of
+# silently opening Firefox.
+find_zen() {
+    local b f
+    for b in zen-browser zen zen-bin; do
+        command -v "$b" >/dev/null 2>&1 && { command -v "$b"; return 0; }
+    done
+    for f in /usr/bin/zen* /opt/zen*/zen /opt/zen*/zen-bin; do
+        [[ -x $f ]] && { echo "$f"; return 0; }
+    done
+    if command -v flatpak >/dev/null && flatpak info app.zen_browser.zen >/dev/null 2>&1; then
+        echo "flatpak run app.zen_browser.zen"; return 0
+    fi
+    return 1
+}
+
+no_install=0
+[[ ${1:-} == --no-install ]] && { no_install=1; shift; }
+
+if zen=$(find_zen); then
+    # shellcheck disable=SC2086  # "flatpak run ..." must split
+    exec $zen "$@"
+fi
+
+if ((no_install == 0)) && command -v yay >/dev/null; then
+    exec kitty --class float-term --title "Install Zen Browser" bash -c '
+        echo "Zen Browser is not installed yet. Installing it from the AUR (needs your password)..."
+        echo
+        if yay -S --needed --noconfirm zen-browser-bin; then
+            d=$(basename "$(ls /usr/share/applications/zen*.desktop 2>/dev/null | head -1)")
+            [[ -n $d ]] && xdg-settings set default-web-browser "$d"
+            echo; echo "Done. Opening Zen..."; sleep 1
+            setsid -f "$HOME/.local/bin/browser" --no-install "$@" >/dev/null 2>&1
+        else
+            echo; echo "Install failed. Opening Firefox instead. Press Enter."; read -r _
+            setsid -f firefox "$@" >/dev/null 2>&1
+        fi' _ "$@"
+fi
+
+command -v firefox >/dev/null 2>&1 && exec firefox "$@"
+notify-send "browser" "No browser found."

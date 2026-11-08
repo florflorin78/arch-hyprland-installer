@@ -4,51 +4,51 @@ command_timeout = 500
 format = "$username$hostname$directory$git_branch$git_status$python$rust$nodejs$golang$docker_context$cmd_duration$character"
 
 [character]
-success_symbol = "[\\$](bold #39ff7a) "
-error_symbol = "[\\$](bold #ff4d4d) "
+success_symbol = "[\\$](bold #e5c95a) "
+error_symbol = "[\\$](bold #e05a6f) "
 
 [username]
 show_always = true
-style_user = "bold #39ff7a"
+style_user = "bold #e5c95a"
 style_root = "bold red"
 format = "[$user]($style)"
 
 [hostname]
 ssh_only = false
 ssh_symbol = " "
-style = "bold #22d36b"
-format = "[@](#5f8f6e)[$hostname]($style)[:](#5f8f6e)"
+style = "bold #4fb8c4"
+format = "[@](#6b7385)[$hostname]($style)[:](#6b7385)"
 
 [directory]
 format = "[$path]($style)[$read_only]($read_only_style)"
-style = "bold #22d36b"
+style = "bold #4fb8c4"
 truncation_length = 3
 truncation_symbol = "…/"
 
 [git_branch]
 symbol = " "
-style = "bold #0fa84a"
+style = "bold #c45a73"
 
 [git_status]
-style = "#f5c542"
+style = "#e8a13a"
 
 [cmd_duration]
 min_time = 2000
-style = "#5f8f6e"
+style = "#6b7385"
 format = "[ took $duration]($style)"
 
 [python]
 format = "[ py $version]($style)"
-style = "#f5c542"
+style = "#e8a13a"
 
 [rust]
 format = "[ rs $version]($style)"
-style = "#8dffb0"
+style = "#f0d98a"
 
 [nodejs]
 format = "[ node $version]($style)"
-style = "#7dffa8"
+style = "#8bc49a"
 
 [golang]
 format = "[ go $version]($style)"
-style = "#22d36b"
+style = "#4fb8c4"

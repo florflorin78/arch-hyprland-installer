@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=JupyterLab
+Comment=Python notebooks in ~/notebooks
+Exec=sh -c '$HOME/.local/bin/notebooks'
+Icon=accessories-text-editor
+Categories=Development;Science;

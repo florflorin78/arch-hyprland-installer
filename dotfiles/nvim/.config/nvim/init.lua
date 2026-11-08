@@ -39,7 +39,7 @@ require("lazy").setup({
         config = function()
             require("tokyonight").setup({
                 style = "night",
-                on_colors = function(c) c.bg = "#020a05"; c.bg_dark = "#010603" end,
+                on_colors = function(c) c.bg = "#0a0c12"; c.bg_dark = "#07080d" end,
             })
             vim.cmd.colorscheme("tokyonight")
         end,
@@ -61,7 +61,7 @@ require("lazy").setup({
             local b = require("telescope.builtin")
             vim.keymap.set("n", "<leader>ff", b.find_files, { desc = "Find files" })
             vim.keymap.set("n", "<leader>fg", b.live_grep, { desc = "Live grep" })
-            vim.keymap.set("n", "<leader>fb", b.buffers, { desc = "Buffere" })
+            vim.keymap.set("n", "<leader>fb", b.buffers, { desc = "Buffers" })
             vim.keymap.set("n", "<leader>fh", b.help_tags, { desc = "Help" })
         end,
     },

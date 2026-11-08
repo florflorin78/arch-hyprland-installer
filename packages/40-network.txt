@@ -31,7 +31,6 @@ arp-scan
 ipcalc
 tcpreplay
 net-snmp
-frr
 bird
 freerdp
 

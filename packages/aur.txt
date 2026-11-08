@@ -3,3 +3,6 @@ zen-browser-bin
 wl-kbptr
 wiremix
 seclists
+ffuf
+wfuzz
+python-impacket

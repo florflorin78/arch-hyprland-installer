@@ -89,7 +89,7 @@ run_cmd "Rust stable, neovim plugins, tldr" setup_unelte || true
 step "SSH key"
 if [[ ! -f $HOME/.ssh/id_ed25519 ]] && confirm "Generate an ed25519 SSH key (for GitHub)?"; then
     mkdir -p "$HOME/.ssh" && chmod 700 "$HOME/.ssh"
-    ssh-keygen -t ed25519 -C "$(git config --file "$HOME/.gitconfig" user.email || echo "$USER@$(hostname)")" -f "$HOME/.ssh/id_ed25519"
+    ssh-keygen -t ed25519 -C "$(git config --file "$HOME/.gitconfig" user.email || echo "$USER@$(cat /proc/sys/kernel/hostname)")" -f "$HOME/.ssh/id_ed25519"
     info "Public key (add it at GitHub > Settings > SSH keys):"
     cat "$HOME/.ssh/id_ed25519.pub"
 else

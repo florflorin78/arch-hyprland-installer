@@ -1,0 +1,61 @@
+Code & IDE	VS Code	gui	code	Full IDE: editor, debugger, git, extensions, Jupyter notebooks inside the editor.	code .   (open the current folder);Ctrl+Shift+P   command palette (search any action);Ctrl+backtick   built-in terminal;Install extensions: Python, Jupyter, C/C++, Go, Rust
+Code & IDE	Neovim	tui	nvim	Fast keyboard-only editor in the terminal, with code completion (LSP).	nvim app.py;i = type, Esc = stop typing, :w = save, :q = quit;Space f f = find files, Space f g = search text, - = file explorer
+Code & IDE	lazygit	tui	lazygit	Git with a friendly terminal interface.	run it inside a git folder;space = stage file, c = commit, P = push, ? = help
+Code & IDE	GitHub CLI	cli	gh	GitHub from the terminal: clone, pull requests, issues.	gh auth login;gh repo clone owner/repo;gh pr create
+Code & IDE	Docker	cli	docker	Run software in isolated containers.	docker run hello-world;docker ps   (running containers);docker compose up -d
+Code & IDE	k9s	tui	k9s	Dashboard for Kubernetes clusters (needs a kubeconfig).	k9s;: pods   (jump to pods), q = back
+Code & IDE	Python	cli	python	Python 3 with pip, venv and uv.	python -m venv .venv && source .venv/bin/activate;uv pip install requests;python script.py
+Code & IDE	Node.js	cli	node	JavaScript/TypeScript runtime with npm and pnpm.	npm init -y;pnpm add express;node app.js
+Code & IDE	Rust	cli	cargo	Rust toolchain (rustup + cargo).	cargo new hello && cd hello;cargo run
+Code & IDE	Go	cli	go	Go toolchain.	go mod init hello;go run .
+Code & IDE	Java	cli	java	OpenJDK + Maven.	javac Main.java && java Main;mvn package
+Code & IDE	C / C++	cli	gcc	gcc, clang, cmake, gdb (debugger), valgrind (memory checks).	gcc main.c -o main && ./main;gdb ./main
+Code & IDE	HTTPie	cli	http	Readable HTTP requests, good for testing APIs.	http GET https://api.github.com/users/octocat;http POST localhost:8000/items name=test
+AI & LLM	Claude Code	tui	claude	Anthropic's AI assistant in the terminal: reads your project, writes and fixes code.	cd my-project && claude;type what you want in plain words;/help inside Claude lists commands
+AI & LLM	Claude (web)	gui	browser https://claude.ai	Claude chat in the browser.	SUPER+SHIFT+X opens it
+AI & LLM	Local AI chat (Ollama)	tui	ai-chat	Run small language models offline on this laptop (slow but private).	ai-chat   (first run downloads ~1.3 GB);ollama list   (installed models);ollama pull qwen2.5:1.5b
+Data science & neural networks	JupyterLab	gui	notebooks	Notebooks: code, charts and notes in one page. Best place to learn ML.	SUPER+J opens it (files go to ~/notebooks);Shift+Enter runs a cell;New notebook > Python 3
+Data science & neural networks	NumPy / pandas / Matplotlib	cli	python	Arrays, tables (CSV/Excel) and charts.	import pandas as pd;df = pd.read_csv('data.csv');df.describe();df.plot()
+Data science & neural networks	PyTorch	cli	python	Build and train neural networks (runs on the CPU here).	import torch.nn as nn;model = nn.Sequential(nn.Linear(4, 16), nn.ReLU(), nn.Linear(16, 1))
+Data science & neural networks	scikit-learn	cli	python	Classic machine learning: regression, classification, clustering.	from sklearn.linear_model import LinearRegression;LinearRegression().fit(X, y)
+Networking	nmtui	tui	nmtui	Connect to Wi-Fi, Ethernet and VPNs (also SUPER+N).	nmtui;nmcli device wifi list
+Networking	Wireshark	gui	wireshark	Capture and inspect network packets with filters.	pick an interface, start capture;filter: dns, http, ip.addr == 192.168.1.1
+Networking	termshark	tui	sudo termshark	Wireshark inside the terminal.	sudo termshark -i wlan0;sudo termshark -r capture.pcap
+Networking	tcpdump	cli	sudo tcpdump	Capture packets from the command line.	sudo tcpdump -i any port 53;sudo tcpdump -w capture.pcap
+Networking	nmap	cli	nmap	Discover hosts and open ports (only on networks you own or may test).	nmap -sn 192.168.1.0/24   (who is online);nmap -sV 192.168.1.10   (services)
+Networking	mtr	tui	mtr	Live traceroute + ping: see where the connection is slow.	mtr google.com
+Networking	iperf3	cli	iperf3	Measure bandwidth between two machines.	iperf3 -s   (server);iperf3 -c 192.168.1.10   (client)
+Networking	dig / whois	cli	dig	DNS lookups and domain ownership.	dig example.com;dig +short MX gmail.com;whois example.com
+Networking	bmon / iftop / nethogs	tui	bmon	Live traffic per interface / connection / process.	bmon;sudo iftop;sudo nethogs
+Networking	WireGuard	cli	wg	Modern VPN.	sudo wg-quick up ./wg0.conf;sudo wg show
+Networking	OpenVPN	cli	openvpn	Classic VPN client.	sudo openvpn --config client.ovpn
+Networking	picocom / minicom	tui	picocom	Serial console for routers and switches (console cable).	sudo picocom -b 9600 /dev/ttyUSB0   (Ctrl+A Ctrl+X to exit)
+Networking	Virtual Machine Manager	gui	virt-manager	Virtual machines for labs (routers, servers, other OSes).	File > New Virtual Machine > choose an ISO
+Networking	BIRD	cli	birdc	Routing daemon to practise BGP/OSPF in labs.	sudo systemctl start bird;birdc show protocols
+Networking	ipcalc	cli	ipcalc	Subnet calculator.	ipcalc 192.168.10.0/26
+Networking	mosh	cli	mosh	SSH that survives Wi-Fi changes and sleep.	mosh user@server
+Security (authorized testing only)	Metasploit	cli	msfconsole	Exploitation framework for labs and authorized pentests.	msfconsole;search smb;use <module>, show options, run
+Security (authorized testing only)	OWASP ZAP	gui	zaproxy	Web app security scanner and proxy.	Automated Scan > URL of your test app
+Security (authorized testing only)	Ghidra	gui	ghidra	Reverse engineering: decompile binaries.	New Project > Import File > double-click to analyse
+Security (authorized testing only)	radare2	cli	r2	Reverse engineering in the terminal.	r2 -A ./binary;afl   (functions), pdf @ main
+Security (authorized testing only)	hashcat / John	cli	hashcat	Password hash cracking (your own hashes / labs).	hashcat -m 0 hashes.txt wordlist.txt;john hashes.txt
+Security (authorized testing only)	hydra	cli	hydra	Login brute-forcing against your own test services.	hydra -l admin -P list.txt ssh://192.168.56.10
+Security (authorized testing only)	sqlmap	cli	sqlmap	Find SQL injection in test web apps.	sqlmap -u 'http://lab/item?id=1' --batch
+Security (authorized testing only)	gobuster / ffuf	cli	gobuster	Find hidden web paths.	gobuster dir -u http://lab -w /usr/share/seclists/Discovery/Web-Content/common.txt;ffuf -u http://lab/FUZZ -w list.txt
+Security (authorized testing only)	nikto	cli	nikto	Quick web server misconfiguration scan.	nikto -h http://lab
+Security (authorized testing only)	aircrack-ng	cli	aircrack-ng	Wi-Fi security testing (your own network).	sudo airmon-ng;sudo airodump-ng wlan0mon
+Security (authorized testing only)	bettercap	cli	sudo bettercap	Network attacks/monitoring lab tool.	sudo bettercap -iface wlan0;help
+Security (authorized testing only)	testssl.sh	cli	testssl.sh	Check a server's TLS configuration.	testssl.sh example.com
+Security (authorized testing only)	Tor / proxychains	cli	proxychains	Route a command through Tor.	sudo systemctl start tor;proxychains curl ifconfig.me
+System & files	yazi	tui	yazi	File manager in the terminal (also SUPER+E).	arrows/hjkl move, Enter open, Space select, d delete, ? help
+System & files	btop	tui	btop	See CPU, RAM, disk, network and processes (also SUPER+SHIFT+T).	btop;k = kill process, q = quit
+System & files	KeePassXC	gui	keepassxc	Password manager (offline database).	Database > New Database
+System & files	ncdu	tui	ncdu	Find what fills the disk.	ncdu ~
+System & files	tldr	cli	tldr	Short examples for any command.	tldr tar;tldr ssh
+System & files	fastfetch	cli	fastfetch	System summary with your logo.	fastfetch
+Office & media	Zen Browser	gui	browser	Main web browser (SUPER+B).	
+Office & media	Firefox	gui	firefox	Backup browser (SUPER+CTRL+B).	
+Office & media	LibreOffice	gui	libreoffice	Documents, spreadsheets, presentations (opens .docx/.xlsx/.pptx).	
+Office & media	Obsidian	gui	obsidian	Markdown notes; good for a learning journal.	
+Office & media	zathura	gui	zathura	Fast PDF viewer (j/k scroll, + / - zoom).	zathura file.pdf
+Office & media	mpv / imv	gui	mpv	Video player / image viewer.	mpv video.mp4;imv picture.png

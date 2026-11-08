@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# Local AI chat with Ollama (offline). Default model is small enough for 8 GB RAM.
+model=${1:-llama3.2:1b}
+if ! pgrep -x ollama >/dev/null; then
+    (ollama serve >/dev/null 2>&1 &)
+    sleep 2
+fi
+echo "Model: $model   (first run downloads it; type /bye to quit)"
+exec ollama run "$model"

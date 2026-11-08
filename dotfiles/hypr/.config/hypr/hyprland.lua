@@ -20,12 +20,18 @@ hl.env("QT_QPA_PLATFORM", "wayland;xcb")
 hl.env("LIBVA_DRIVER_NAME", "iHD")            -- Intel HD 520 video acceleration
 hl.env("MOZ_ENABLE_WAYLAND", "1")
 hl.env("ELECTRON_OZONE_PLATFORM_HINT", "auto")
+hl.env("XDG_CURRENT_DESKTOP", "Hyprland")
+hl.env("XDG_SESSION_TYPE", "wayland")
+hl.env("XDG_SESSION_DESKTOP", "Hyprland")
+hl.env("GDK_BACKEND", "wayland,x11")
+hl.env("_JAVA_AWT_WM_NONREPARENTING", "1")    -- Java apps (Ghidra, ZAP) stay blank in tiling WMs without it
 
 ------------------------------------------------------------------ AUTOSTART
 hl.on("hyprland.start", function()
-    hl.exec_cmd("dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP")
+    hl.exec_cmd(bin .. "wallpaper")
+    -- full env to dbus/systemd: without it the portals time out and GTK/Electron apps take ~25s to open
+    hl.exec_cmd("dbus-update-activation-environment --systemd --all")
     hl.exec_cmd("systemctl --user start hyprpolkitagent.service")
-    hl.exec_cmd(bin .. "rain auto")
     hl.exec_cmd("waybar")
     hl.exec_cmd("mako")
     hl.exec_cmd("udiskie --tray --notify")   -- automount USB drives
@@ -52,7 +58,7 @@ local function read_power_mode()
     return "normal"
 end
 local power_mode = read_power_mode()
-local effects    = (power_mode == "normal")
+local effects    = false   -- blur/shadows off: the HD 520 stays smooth
 local animate    = (power_mode ~= "eco")
 
 ------------------------------------------------------------------ APPEARANCE
@@ -62,8 +68,8 @@ hl.config({
         gaps_out = 8,
         border_size = 2,
         col = {
-            active_border   = { colors = { "rgba(39ff7aff)", "rgba(22d36bff)" }, angle = 45 },
-            inactive_border = "rgba(0f3a1eaa)",
+            active_border   = { colors = { "rgba(e5c95aff)", "rgba(4fb8c4ff)" }, angle = 45 },
+            inactive_border = "rgba(2a3142aa)",
         },
         resize_on_border = false,
         allow_tearing = false,
@@ -74,17 +80,17 @@ hl.config({
         rounding = 10,
         rounding_power = 2,
         active_opacity = 1.0,
-        inactive_opacity = 0.96,
+        inactive_opacity = 1.0,
         shadow = {
             enabled = effects,
-            range = 16,
+            range = 10,
             render_power = 3,
-            color = "rgba(39ff7a40)",
+            color = "rgba(e5c95a40)",
         },
         blur = {
             enabled = effects,
-            size = 4,
-            passes = 2,
+            size = 3,
+            passes = 1,
             vibrancy = 0.17,
         },
     },
@@ -96,6 +102,9 @@ hl.config({
     misc = {
         force_default_wallpaper = 0,
         disable_hyprland_logo = true,
+        disable_splash_rendering = true,
+        background_color = "rgb(0a0c12)",   -- shown before the wallpaper loads
+        vfr = true,
     },
 
     input = {
@@ -117,14 +126,14 @@ hl.curve("smooth", { type = "bezier", points = { { 0.22, 1 }, { 0.36, 1 } } })
 hl.curve("snappy", { type = "bezier", points = { { 0.16, 1 }, { 0.30, 1 } } })
 hl.curve("linear", { type = "bezier", points = { { 0, 0 }, { 1, 1 } } })
 
-hl.animation({ leaf = "global",        enabled = true, speed = 6,   bezier = "smooth" })
-hl.animation({ leaf = "windowsIn",     enabled = true, speed = 4,   bezier = "snappy", style = "popin 85%" })
-hl.animation({ leaf = "windowsOut",    enabled = true, speed = 3.5, bezier = "smooth", style = "popin 85%" })
-hl.animation({ leaf = "windowsMove",   enabled = true, speed = 4,   bezier = "smooth" })
-hl.animation({ leaf = "fade",          enabled = true, speed = 3,   bezier = "smooth" })
-hl.animation({ leaf = "border",        enabled = true, speed = 6,   bezier = "smooth" })
-hl.animation({ leaf = "layers",        enabled = true, speed = 3.5, bezier = "snappy", style = "fade" })
-hl.animation({ leaf = "workspaces",    enabled = true, speed = 4,   bezier = "snappy", style = "slide" })
+hl.animation({ leaf = "global",        enabled = true, speed = 3,   bezier = "smooth" })
+hl.animation({ leaf = "windowsIn",     enabled = true, speed = 2.5, bezier = "snappy", style = "popin 90%" })
+hl.animation({ leaf = "windowsOut",    enabled = true, speed = 2,   bezier = "smooth", style = "popin 90%" })
+hl.animation({ leaf = "windowsMove",   enabled = true, speed = 2.5,   bezier = "smooth" })
+hl.animation({ leaf = "fade",          enabled = true, speed = 2,   bezier = "smooth" })
+hl.animation({ leaf = "border",        enabled = true, speed = 3,   bezier = "smooth" })
+hl.animation({ leaf = "layers",        enabled = true, speed = 2, bezier = "snappy", style = "fade" })
+hl.animation({ leaf = "workspaces",    enabled = true, speed = 2.5,   bezier = "snappy", style = "slide" })
 
 -- 3-finger swipe = switch workspace
 hl.gesture({ fingers = 3, direction = "horizontal", action = "workspace" })
@@ -162,12 +171,14 @@ local function float_term(cmd) return run(terminal .. " --class float-term -e " 
 
 -- Apps
 bind(mod .. " + Return",           run(terminal),                                 "Terminal (kitty)")
-bind(mod .. " + D",                run("pkill wofi || wofi --show drun"),         "App launcher")
+bind(mod .. " + D",                run("pkill wofi || wofi --show drun"),         "App launcher (search by name)")
+bind(mod .. " + A",                run(bin .. "apps-menu"),                       "Apps by category (with descriptions)")
+bind(mod .. " + H",                run(bin .. "keybinds-help"),                   "Help: all keyboard shortcuts")
+bind(mod .. " + F1",               run(bin .. "help"),                            "Help center (shortcuts, apps guide, Linux basics)")
 bind(mod .. " + SHIFT + D",        run("pkill wofi || wofi --show run"),          "Run command")
 bind(mod .. " + B",                run(bin .. "browser"),                         "Browser (Zen)")
-bind(mod .. " + SHIFT + B",        run("qutebrowser"),                            "Qutebrowser (keyboard-driven)")
 bind(mod .. " + CTRL + B",         run("firefox"),                                "Firefox (fallback)")
-bind(mod .. " + X",                run(terminal .. " --class float-term -e claude"), "Claude Code (terminal)")
+bind(mod .. " + X",                run(terminal .. " -e claude"),                 "Claude Code (AI assistant in the terminal)")
 bind(mod .. " + SHIFT + X",        run(bin .. "browser https://claude.ai"),       "Claude in browser (claude.ai)")
 bind(mod .. " + CTRL + N",         run(bin .. "nightlight"),                      "Night light on/off")
 bind(mod .. " + CTRL + P",         run("hyprpicker -a"),                          "Color picker (copies color)")
@@ -175,18 +186,18 @@ bind(mod .. " + CTRL + M",         run("makoctl dismiss --all"),                
 bind(mod .. " + CTRL + R",         run("makoctl restore"),                        "Restore last notification")
 bind(mod .. " + CTRL + D",         run(bin .. "dnd toggle"),                      "Do not disturb on/off")
 bind(mod .. " + W",                run(bin .. "wallpaper next"),                  "Next wallpaper")
-bind(mod .. " + SHIFT + W",         run(bin .. "rain toggle"),                     "Live matrix rain on/off (AC only)")
+bind(mod .. " + SHIFT + W",         run(bin .. "rain toggle"),                     "Live data rain on/off (AC only)")
 bind(mod .. " + equal",            float_term("qalc"),                            "Calculator (qalc)")
 bind(mod .. " + CTRL + Return",    run(terminal .. " --class float-term"),        "Floating terminal")
 bind(mod .. " + E",                run(terminal .. " -e yazi"),                   "File manager (yazi)")
-bind(mod .. " + C",                run("code"),                                   "VS Code")
+bind(mod .. " + C",                run("code"),                                   "VS Code (IDE)")
+bind(mod .. " + J",                run(bin .. "notebooks"),                     "JupyterLab (notebooks)")
 bind(mod .. " + N",                float_term("nmtui"),                           "Network (nmtui)")
-bind(mod .. " + A",                float_term("pulsemixer"),                      "Audio mixer")
+bind(mod .. " + SHIFT + A",        float_term("pulsemixer"),                      "Audio mixer")
 bind(mod .. " + Y",                float_term("bluetui"),                         "Bluetooth")
 bind(mod .. " + SHIFT + T",        float_term("btop"),                            "System monitor (btop)")
 bind(mod .. " + V",                run(bin .. "clipboard-menu"),                  "Clipboard history")
 bind(mod .. " + M",                run("wl-kbptr"),                               "Mouse from keyboard (hints)")
-bind(mod .. " + F1",               run(bin .. "keybinds-help"),                   "Shortcut list")
 bind(mod .. " + F10",              run(bin .. "eco-mode"),                        "Eco mode on/off (max battery)")
 
 -- Session
@@ -206,23 +217,17 @@ hl.bind("ALT + Tab", function()
     hl.dispatch(hl.dsp.window.bring_to_top())
 end, { description = "Next window (Alt+Tab)" })
 
--- Focus (vim keys + arrows)
-local dirs = { h = "left", j = "down", k = "up", l = "right" }
-for key, d in pairs(dirs) do
-    bind(mod .. " + " .. key,                    hl.dsp.focus({ direction = d }),         "Focus " .. d)
-    bind(mod .. " + SHIFT + " .. key,            hl.dsp.window.move({ direction = d }),   "Move window " .. d)
-end
-bind(mod .. " + left",  hl.dsp.focus({ direction = "left" }),  "Focus left")
-bind(mod .. " + right", hl.dsp.focus({ direction = "right" }), "Focus right")
-bind(mod .. " + up",    hl.dsp.focus({ direction = "up" }),    "Focus up")
-bind(mod .. " + down",  hl.dsp.focus({ direction = "down" }),  "Focus down")
-
--- Resize (repeats while held)
+-- Focus / move / resize with the arrow keys
+local arrows = { left = "left", right = "right", up = "up", down = "down" }
 local step = 40
-bind(mod .. " + CTRL + h", hl.dsp.window.resize({ x = -step, y = 0, relative = true }), "Resize left", { repeating = true })
-bind(mod .. " + CTRL + l", hl.dsp.window.resize({ x = step,  y = 0, relative = true }), "Resize right", { repeating = true })
-bind(mod .. " + CTRL + k", hl.dsp.window.resize({ x = 0, y = -step, relative = true }), "Resize up", { repeating = true })
-bind(mod .. " + CTRL + j", hl.dsp.window.resize({ x = 0, y = step,  relative = true }), "Resize down", { repeating = true })
+local delta = { left = { -step, 0 }, right = { step, 0 }, up = { 0, -step }, down = { 0, step } }
+for key, d in pairs(arrows) do
+    bind(mod .. " + " .. key,           hl.dsp.focus({ direction = d }),       "Focus window " .. d)
+    bind(mod .. " + SHIFT + " .. key,   hl.dsp.window.move({ direction = d }), "Move window " .. d)
+    bind(mod .. " + CTRL + " .. key,
+         hl.dsp.window.resize({ x = delta[key][1], y = delta[key][2], relative = true }),
+         "Resize window " .. d, { repeating = true })
+end
 
 -- Workspaces 1..10
 for i = 1, 10 do

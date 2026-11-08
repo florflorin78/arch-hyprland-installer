@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Help center
+Comment=Shortcuts, apps guide, Linux basics
+Exec=sh -c '$HOME/.local/bin/help'
+Icon=help-browser
+Categories=Utility;

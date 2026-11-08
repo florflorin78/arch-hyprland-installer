@@ -23,7 +23,7 @@ apply() {
     if [[ $new != "$old" ]]; then
         echo "$new" > "$state"
         hyprctl reload >/dev/null 2>&1
-        "$HOME/.local/bin/rain" auto &
+        [[ $(cat "$HOME/.local/state/arch-hyprland/rain" 2>/dev/null) == on ]] && "$HOME/.local/bin/rain" auto &
     fi
 }
 

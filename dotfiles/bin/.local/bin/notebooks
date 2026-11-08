@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# JupyterLab in ~/notebooks (named "notebooks" so it does not shadow /usr/bin/jupyter-lab).
+mkdir -p "$HOME/notebooks"
+if pgrep -f "bin/jupyter-lab" >/dev/null; then
+    exec jupyter lab list
+fi
+exec kitty --class float-term --title "JupyterLab server (close = stop)" \
+    jupyter lab --notebook-dir="$HOME/notebooks"

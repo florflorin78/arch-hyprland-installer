@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# Help center (SUPER+F1): shortcuts, apps, guides.
+docs="$HOME/.local/share/arch-hyprland"
+read_doc() {   # open a markdown guide in a floating terminal
+    local viewer="less -R"
+    command -v glow >/dev/null && viewer="glow -p -w 100"
+    setsid -f kitty --class float-term --title "$1" sh -c "$viewer '$docs/$1'" >/dev/null 2>&1
+}
+
+choice=$(printf '%s\n' \
+    "Keyboard shortcuts            SUPER+H" \
+    "Apps by category              SUPER+A" \
+    "Apps guide                    what each app does + examples" \
+    "Linux basics                  commands you use every day" \
+    "How this system works         where configs live, how to change them" \
+    "Update the system             pacman + AUR" |
+    wofi --dmenu --prompt "Help" --width 760 --height 340 --cache-file /dev/null) || exit 0
+
+case $choice in
+    Keyboard*) exec "$HOME/.local/bin/keybinds-help" ;;
+    "Apps by"*) exec "$HOME/.local/bin/apps-menu" ;;
+    "Apps guide"*) read_doc APPS.md ;;
+    Linux*) read_doc LINUX-BASICS.md ;;
+    How*) read_doc SYSTEM.md ;;
+    Update*) setsid -f kitty --class float-term --title "Update" sh -c 'sudo pacman -Syu; command -v yay >/dev/null && yay -Sua; printf "\nDone. Enter to close."; read -r _' ;;
+esac

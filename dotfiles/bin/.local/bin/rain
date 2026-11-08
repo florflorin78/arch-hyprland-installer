@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
-# Live matrix rain wallpaper (a kitty background panel running cmatrix), AC power only.
+# Live data-rain wallpaper (kitty background panel + cmatrix). Opt-in, AC power only:
+# it redraws the whole screen and costs GPU/CPU on the HD 520.
 #   rain toggle | start | stop | auto   (auto: start on AC if enabled, stop on battery/eco)
 state="$HOME/.local/state/arch-hyprland/rain"
 mode_file="${XDG_RUNTIME_DIR:-/tmp}/hypr-power-mode"
-clean="$HOME/Pictures/wallpapers/matrix-clean.png"
+clean="$HOME/Pictures/wallpapers/cyber-clean.png"
 mkdir -p "$(dirname "$state")"
 
 running() { pgrep -f 'kitten.*panel.*cmatrix' >/dev/null || pgrep -f 'kitty.*--edge=background' >/dev/null; }
@@ -13,7 +14,7 @@ start() {
     [[ -f $clean ]] && "$HOME/.local/bin/wallpaper" "$clean"
     nohup kitty +kitten panel --edge=background --config=NONE \
         -o background_opacity=0 -o font_size=13 -o cursor_blink_interval=0 \
-        cmatrix -ab -C green >/dev/null 2>&1 &
+        cmatrix -ab -C cyan >/dev/null 2>&1 &
 }
 
 stop() {
@@ -28,7 +29,6 @@ case ${1:-toggle} in
     toggle) if running; then echo off > "$state"; stop; else echo on > "$state"; start; fi ;;
     auto)
         mode=$(cat "$mode_file" 2>/dev/null || echo normal)
-        if [[ $(cat "$state" 2>/dev/null || echo on) == on && $mode == normal ]]; then start
-        elif running; then stop
-        elif ! pgrep -x swaybg >/dev/null; then "$HOME/.local/bin/wallpaper"; fi ;;
+        if [[ $(cat "$state" 2>/dev/null || echo off) == on && $mode == normal ]]; then start
+        elif running; then stop; fi ;;
 esac

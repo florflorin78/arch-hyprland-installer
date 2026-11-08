@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Local AI chat (Ollama)
+Comment=Offline language model in the terminal
+Exec=kitty --title "Local AI" sh -c '$HOME/.local/bin/ai-chat'
+Icon=utilities-terminal
+Categories=Development;

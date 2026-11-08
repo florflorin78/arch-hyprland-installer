@@ -34,7 +34,6 @@ playerctl
 
 # apps
 firefox
-qutebrowser
 yazi
 ffmpeg
 poppler
@@ -66,3 +65,9 @@ tesseract-data-eng
 libqalculate
 cava
 cmatrix
+
+
+# office, notes, docs viewer
+libreoffice-fresh
+obsidian
+glow

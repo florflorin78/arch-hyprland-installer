@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Claude (web)
+Comment=Claude chat in the browser
+Exec=sh -c '$HOME/.local/bin/browser https://claude.ai'
+Icon=internet-web-browser
+Categories=Network;

@@ -1,6 +1,6 @@
 [Plymouth Theme]
 Name=Hacker Linux
-Description=Matrix-terminal boot splash: falling glyphs, boot log, progress bar
+Description=Retro-futurist boot splash: avatar, data streams, boot log, progress bar
 ModuleName=script
 
 [script]
