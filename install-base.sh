@@ -129,8 +129,16 @@ ROOT_DEV=$P_ROOT
 if [[ $LUKS == yes ]]; then
     echo
     info "Choose the disk encryption password (you type it at every boot)."
-    cryptsetup luksFormat --type luks2 "$P_ROOT"
-    cryptsetup open "$P_ROOT" cryptroot
+    new_secret LUKS_PASS "Disk password"
+    # handed to cryptsetup through a RAM-only file (no newline = same bytes you type at boot),
+    # so the prompt above, with its Caps Lock indicator, is the only password prompt
+    KEYFILE=$(umask 077 && mktemp /dev/shm/luks.XXXXXX)
+    printf '%s' "$LUKS_PASS" > "$KEYFILE"
+    unset LUKS_PASS
+    run_cmd "Encrypting the root partition (LUKS2)" \
+        cryptsetup luksFormat --type luks2 --batch-mode --key-file "$KEYFILE" "$P_ROOT"
+    run_cmd "Unlocking it" cryptsetup open --key-file "$KEYFILE" "$P_ROOT" cryptroot
+    shred -u "$KEYFILE" 2>/dev/null || rm -f "$KEYFILE"
     LUKS_UUID=$(blkid -s UUID -o value "$P_ROOT")
     ROOT_DEV=/dev/mapper/cryptroot
 fi

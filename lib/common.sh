@@ -165,10 +165,55 @@ run_cmd() {
     return "$rc"
 }
 
+# ------------------------------------------------------------------ Caps Lock
+# Reads the keyboard LED from sysfs (works on the ISO console and in chroot).
+CAPS_GLOB=${CAPS_GLOB:-/sys/class/leds/*::capslock/brightness}
+caps_on() {
+    local f
+    for f in $CAPS_GLOB; do
+        [[ -r $f && $(<"$f") != 0 ]] && return 0
+    done
+    return 1
+}
+caps_tag() { caps_on && printf ' %s[ CAPS LOCK ON ]%s' "$C_RED" "$C_RESET"; }
+
+# ask_secret VAR "Prompt": hidden input with a live Caps Lock indicator and * per character
+ask_secret() {
+    local __var=$1 __q=$2 __s="" __c __rc
+    while :; do
+        printf '\r\e[K %s?%s %s: %s%s%s' "$C_HI" "$C_RESET" "$__q" "$C_HI" "$(repeat '*' ${#__s})" "$C_RESET"
+        caps_tag
+        __rc=0
+        IFS= read -rsn1 -t 0.25 __c || __rc=$?
+        ((__rc > 128)) && continue                   # timeout: just refresh the Caps Lock tag
+        ((__rc != 0)) && break
+        case $__c in
+            "") break ;;                             # Enter
+            $'\x7f' | $'\b') __s=${__s%?} ;;           # Backspace
+            *) __s+=$__c ;;
+        esac
+    done
+    printf '\r\e[K %s?%s %s: %s%s%s\n' "$C_HI" "$C_RESET" "$__q" "$C_HI" "$(repeat '*' ${#__s})" "$C_RESET"
+    printf -v "$__var" '%s' "$__s"
+}
+
+# new_secret VAR "What": ask twice until both match and it is not empty
+new_secret() {
+    local __var=$1 __what=$2 __a __b
+    while :; do
+        ask_secret __a "$__what"
+        ask_secret __b "Repeat $__what"
+        if [[ -z $__a ]]; then warn "Empty, try again."
+        elif [[ $__a != "$__b" ]]; then warn "They do not match, try again."
+        else break; fi
+    done
+    printf -v "$__var" '%s' "$__a"
+}
+
 # confirm "Question?" -> 0 only on y/Y
 confirm() {
     local r
-    read -r -p " ${C_HI}?${C_RESET} $1 ${C_BASE}[y/N]${C_RESET}> ${C_HI}" r
+    read -r -p " ${C_HI}?${C_RESET} $1 ${C_BASE}[y/N]${C_RESET}$(caps_tag)> ${C_HI}" r
     printf '%s' "$C_RESET"
     [[ $r =~ ^[yY]$ ]]
 }
@@ -176,7 +221,7 @@ confirm() {
 # ask VAR "Question" [default]
 ask() {
     local __var=$1 __q=$2 __def=${3:-} __r
-    read -r -p " ${C_HI}?${C_RESET} ${__q}${__def:+ ${C_BASE}[$__def]${C_RESET}}> ${C_HI}" __r
+    read -r -p " ${C_HI}?${C_RESET} ${__q}${__def:+ ${C_BASE}[$__def]${C_RESET}}$(caps_tag)> ${C_HI}" __r
     printf '%s' "$C_RESET"
     printf -v "$__var" '%s' "${__r:-$__def}"
 }

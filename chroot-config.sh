@@ -40,10 +40,11 @@ step "User"
 id "$USERNAME" &>/dev/null || useradd -m -G wheel,video,input,audio -s /bin/zsh "$USERNAME"
 echo '%wheel ALL=(ALL:ALL) ALL' > /etc/sudoers.d/10-wheel
 chmod 440 /etc/sudoers.d/10-wheel
-info "Password for root:"
-until passwd root; do warn "Try again."; done
-info "Password for $USERNAME (used to log in):"
-until passwd "$USERNAME"; do warn "Try again."; done
+new_secret PW "Password for root"
+printf 'root:%s\n' "$PW" | chpasswd
+new_secret PW "Password for $USERNAME (used to log in)"
+printf '%s:%s\n' "$USERNAME" "$PW" | chpasswd
+unset PW
 
 # ---------------------------------------------------------------- 3
 step "Packages"
