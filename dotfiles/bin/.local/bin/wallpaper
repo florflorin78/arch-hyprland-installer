@@ -5,10 +5,13 @@ flock 9
 
 dir="$HOME/Pictures/wallpapers"
 state="$HOME/.local/state/arch-hyprland/wallpaper"
-mapfile -t files < <(find "$dir" -maxdepth 1 -type f \( -name '*.png' -o -name '*.jpg' -o -name '*.jpeg' \) ! -name 'cyber-clean.png' | sort)
+# -L: the wallpapers are stow symlinks, plain "-type f" would skip them all
+mapfile -t files < <(find -L "$dir" -maxdepth 1 -type f \( -name '*.png' -o -name '*.jpg' -o -name '*.jpeg' \) ! -name 'cyber-clean.png' | sort)
 ((${#files[@]})) || exit 1
 if [[ -f ${1:-} ]]; then pkill -x swaybg; swaybg -i "$1" -m fill 9>&- & disown; exit 0; fi
 cur=$(cat "$state" 2>/dev/null || echo 0)
+[[ $cur =~ ^[0-9]+$ ]] || cur=0
+cur=$((cur % ${#files[@]}))                 # the list may have shrunk since last time
 [[ ${1:-} == next ]] && cur=$(((cur + 1) % ${#files[@]}))
 echo "$cur" > "$state"
 pkill -x swaybg

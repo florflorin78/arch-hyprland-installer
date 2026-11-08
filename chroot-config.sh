@@ -58,12 +58,13 @@ done
 step "System configuration"
 system_config() {
     cp -r "$REPO/system/etc/." /etc/
+    cp -r "$REPO/system/usr/." /usr/
     sed -i 's/^ENABLED=.*/ENABLED=yes/' /etc/ufw/ufw.conf 2>/dev/null || true
     if [[ ${AUTOLOGIN:-no} == yes ]]; then
         cat >> /etc/greetd/config.toml <<GREETD
 
 [initial_session]
-command = "start-hyprland"
+command = "hyprland-session"
 user = "$USERNAME"
 GREETD
     fi
@@ -122,7 +123,7 @@ grub_config() {
     grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=Arch --recheck
     # fallback path for firmware that drops NVRAM entries (VirtualBox)
     grub-install --target=x86_64-efi --efi-directory=/boot --removable --recheck
-    grub-mkconfig -o /boot/grub/grub.cfg
+    /usr/local/bin/grub-quiet   # also runs grub-mkconfig
 }
 run_cmd "Installing GRUB" grub_config
 

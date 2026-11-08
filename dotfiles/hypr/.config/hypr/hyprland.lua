@@ -99,12 +99,13 @@ hl.config({
 
     dwindle = { preserve_split = true },
 
+    -- no "Hyprland updated" window and no donation popup after updates
+    ecosystem = { no_update_news = true, no_donation_nag = true },
+
     misc = {
         force_default_wallpaper = 0,
         disable_hyprland_logo = true,
         disable_splash_rendering = true,
-        background_color = "rgb(0a0c12)",   -- shown before the wallpaper loads
-        vfr = true,
     },
 
     input = {

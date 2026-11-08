@@ -47,7 +47,11 @@ fi
 step "System configs"
 copy_etc() {
     # keep the greetd config made at install time (it holds the autologin choice)
-    sudo rsync -a --exclude 'greetd/config.toml' "$REPO/system/etc/" /etc/
+    # root-owned copies (plain -a would give the files to your user)
+    sudo rsync -r --chown=root:root --chmod=D755,F644 --exclude 'greetd/config.toml' "$REPO/system/etc/" /etc/
+    sudo install -m 755 "$REPO"/system/usr/local/bin/* /usr/local/bin/
+    # quiet session start (no Hyprland logo/log on the console), keeps the autologin choice
+    sudo sed -i 's/start-hyprland/hyprland-session/g' /etc/greetd/config.toml
     sudo systemctl daemon-reload
     sudo systemctl enable --now libvirtd.socket || true
     sudo systemctl restart tlp || true
@@ -62,7 +66,7 @@ boot_theme() {
     sudo sed -i "s|^GRUB_CMDLINE_LINUX_DEFAULT=.*|GRUB_CMDLINE_LINUX_DEFAULT=\"$cmdline\"|" /etc/default/grub
     sudo plymouth-set-default-theme hackerlinux
     sudo mkinitcpio -P
-    sudo grub-mkconfig -o /boot/grub/grub.cfg
+    sudo /usr/local/bin/grub-quiet
 }
 run_cmd "Updating splash, initramfs and GRUB" boot_theme
 

@@ -1,0 +1,10 @@
+[Trigger]
+Type = Package
+Operation = Install
+Operation = Upgrade
+Target = grub
+
+[Action]
+Description = Keeping GRUB quiet (no "Loading Linux" text)...
+When = PostTransaction
+Exec = /usr/local/bin/grub-quiet

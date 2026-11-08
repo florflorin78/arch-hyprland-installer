@@ -1,0 +1,5 @@
+#!/bin/sh
+# Remove GRUB's "Loading Linux ..." / "Loading initial ramdisk ..." lines, then rebuild grub.cfg.
+# Re-run automatically after every grub update by /etc/pacman.d/hooks/90-grub-quiet.hook.
+sed -i '/echo.*\$message.*grub_quote/d' /etc/grub.d/10_linux
+grub-mkconfig -o /boot/grub/grub.cfg

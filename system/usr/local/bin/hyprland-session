@@ -1,0 +1,4 @@
+#!/bin/sh
+# Start Hyprland without printing its ASCII logo and debug log on the console
+# (the full log still goes to $XDG_RUNTIME_DIR/hypr/).
+exec start-hyprland >/dev/null 2>&1
